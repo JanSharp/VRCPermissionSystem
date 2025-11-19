@@ -1,0 +1,26 @@
+{
+    "name": "JanSharp.PermissionSystem.Editor",
+    "rootNamespace": "",
+    "references": [
+        "JanSharp.PermissionSystem",
+        "JanSharp.Common",
+        "JanSharp.Common.Editor",
+        "JanSharp.Lockstep",
+        "UdonSharp.Runtime",
+        "UdonSharp.Editor",
+        "VRC.SDK3",
+        "VRC.SDKBase",
+        "VRC.Udon"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

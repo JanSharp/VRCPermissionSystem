@@ -14,7 +14,8 @@
   "vpmDependencies": {
     "com.vrchat.worlds": "^3.7.4",
     "com.jansharp.common": ">=1.3.0",
-    "com.jansharp.lockstep": ">=1.0.0"
+    "com.jansharp.lockstep": ">=1.0.0",
+    "com.jansharp.player-data": ">=0.1.0"
   },
   "url": "https://github.com/JanSharp/VRCPermissionSystem/releases/download/v0.1.0/com.jansharp.permission-system.zip",
   "changelogUrl": "https://github.com/JanSharp/VRCPermissionSystem/blob/v0.1.0/CHANGELOG.md"

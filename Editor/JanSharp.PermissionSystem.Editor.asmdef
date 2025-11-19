@@ -6,6 +6,7 @@
         "JanSharp.Common",
         "JanSharp.Common.Editor",
         "JanSharp.Lockstep",
+        "JanSharp.PlayerData",
         "UdonSharp.Runtime",
         "UdonSharp.Editor",
         "VRC.SDK3",

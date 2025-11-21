@@ -5,7 +5,7 @@ using VRC.SDK3.Data;
 namespace JanSharp
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    [LockstepGameStateDependency(typeof(PlayerDataManager))]
+    [LockstepGameStateDependency(typeof(PlayerDataManagerAPI))]
     [SingletonScript("fe2230975d59bf380865519bc62b6a3a")] // Runtime/Prefabs/PermissionManager.prefab
     public class PermissionManager : LockstepGameState
     {
@@ -18,7 +18,7 @@ namespace JanSharp
         public override LockstepGameStateOptionsUI ImportUI => null;
 
         [HideInInspector][SerializeField][SingletonReference] private WannaBeClassesManager wannaBeClasses;
-        [HideInInspector][SerializeField][SingletonReference] private PlayerDataManager playerDataManager;
+        [HideInInspector][SerializeField][SingletonReference] private PlayerDataManagerAPI playerDataManager;
 
         #region GameState
         private uint nextGroupId = 1u;

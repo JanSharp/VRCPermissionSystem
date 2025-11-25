@@ -22,6 +22,9 @@ namespace JanSharp
 
         public override void OnPlayerDataInit(bool isAboutToBeImported)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  OnPlayerDataInit");
+#endif
             if (isAboutToBeImported)
                 return;
             permissionGroup = permissionManager.DefaultPermissionGroup;
@@ -29,18 +32,30 @@ namespace JanSharp
 
         public override bool PersistPlayerDataWhileOffline()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  PersistPlayerDataWhileOffline");
+#endif
             return !permissionGroup.isDefault;
         }
 
         public override void Serialize(bool isExport)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Serialize");
+#endif
             lockstep.WriteSmallUInt(permissionGroup.id);
         }
 
         public override void Deserialize(bool isImport, uint importedDataVersion)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Deserialize");
+#endif
             // Resolved in the PermissionManager later.
             deserializedId = lockstep.ReadSmallUInt();
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Deserialize (inner) - core.displayName: {core.displayName}, deserializedId: {deserializedId}");
+#endif
         }
     }
 }

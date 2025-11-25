@@ -58,6 +58,9 @@ namespace JanSharp.Internal
 
         private void Start()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  Start");
+#endif
             playerDataManager.RegisterCustomPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             permissionDefsCount = permissionDefs.Length;
             for (int i = 0; i < permissionDefsCount; i++)
@@ -72,6 +75,9 @@ namespace JanSharp.Internal
         [LockstepEvent(LockstepEventType.OnInit, Order = -20000)]
         public void OnInit()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnInit");
+#endif
             playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
 
             defaultPermissionGroup = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
@@ -88,6 +94,9 @@ namespace JanSharp.Internal
 
         public override PermissionGroup GetPermissionGroup(string groupName)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  GetPermissionGroup");
+#endif
             return groupsByName.TryGetValue(groupName, out DataToken groupToken)
                 ? (PermissionGroup)groupToken.Reference
                 : null;
@@ -95,6 +104,9 @@ namespace JanSharp.Internal
 
         public override void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendDuplicatePermissionGroupIA");
+#endif
             groupName = groupName.Trim();
             if (groupName == "")
                 return;
@@ -107,6 +119,9 @@ namespace JanSharp.Internal
         [LockstepInputAction(nameof(duplicatePermissionGroupIAId))]
         public void OnDuplicatePermissionGroupIA()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnDuplicatePermissionGroupIA");
+#endif
             string groupName = lockstep.ReadString();
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
@@ -116,6 +131,9 @@ namespace JanSharp.Internal
 
         public override PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  DuplicatePermissionGroupInGS");
+#endif
             groupName = groupName.Trim();
             if (groupName == "" || groupsByName.ContainsKey(groupName))
                 return null;
@@ -133,6 +151,9 @@ namespace JanSharp.Internal
 
         private void RegisterCreatedPermissionGroup(PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RegisterCreatedPermissionGroup");
+#endif
             ArrList.Add(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Add(group.id, group);
             groupsByName.Add(group.groupName, group);
@@ -140,6 +161,9 @@ namespace JanSharp.Internal
 
         public override void SendDeletePermissionGroupIA(PermissionGroup group, PermissionGroup groupToMovePlayersTo)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendDeletePermissionGroupIA");
+#endif
             if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
                 return;
             lockstep.WriteSmallUInt(group.id);
@@ -151,6 +175,9 @@ namespace JanSharp.Internal
         [LockstepInputAction(nameof(deletePermissionGroupIAId))]
         public void OnDeletePermissionGroupIA()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnDeletePermissionGroupIA");
+#endif
             uint groupId = lockstep.ReadSmallUInt();
             uint groupToMovePlayersToId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
@@ -164,6 +191,9 @@ namespace JanSharp.Internal
 
         public override void DeletePermissionGroupInGS(PermissionGroup group, PermissionGroup groupToMovePlayersTo)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  DeletePermissionGroupInGS");
+#endif
             if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
                 return;
             group.isDeleted = true;
@@ -184,6 +214,9 @@ namespace JanSharp.Internal
 
         private void DeletePermissionGroupWithoutCleanup(PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  DeletePermissionGroupWithoutCleanup");
+#endif
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);
@@ -192,6 +225,9 @@ namespace JanSharp.Internal
 
         public override void SendRenamePermissionGroupIA(PermissionGroup group, string newGroupName)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendRenamePermissionGroupIA");
+#endif
             if (group.isDefault)
                 return;
             newGroupName = newGroupName.Trim();
@@ -208,6 +244,9 @@ namespace JanSharp.Internal
         [LockstepInputAction(nameof(renamePermissionGroupIAId))]
         public void OnRenamePermissionGroupIA()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnRenamePermissionGroupIA");
+#endif
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
                 return;
@@ -217,6 +256,9 @@ namespace JanSharp.Internal
 
         public override void RenamePermissionGroupInGS(PermissionGroup group, string newGroupName)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RenamePermissionGroupInGS");
+#endif
             if (group.isDefault)
                 return;
             newGroupName = newGroupName.Trim();
@@ -231,6 +273,9 @@ namespace JanSharp.Internal
 
         public override void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendSetPlayerPermissionGroupIA");
+#endif
             lockstep.WriteSmallUInt(corePlayerData.persistentId); // playerId would not work for offline players.
             lockstep.WriteSmallUInt(group.id);
             lockstep.SendInputAction(setPlayerPermissionGroupIAId);
@@ -240,6 +285,9 @@ namespace JanSharp.Internal
         [LockstepInputAction(nameof(setPlayerPermissionGroupIAId))]
         public void OnSetPlayerPermissionGroupIA()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnSetPlayerPermissionGroupIA");
+#endif
             uint persistentId = lockstep.ReadSmallUInt();
             if (!playerDataManager.TryGetCorePlayerDataForPersistentId(persistentId, out CorePlayerData corePlayerData))
                 return;
@@ -251,6 +299,9 @@ namespace JanSharp.Internal
 
         public override void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPlayerPermissionGroupInGS");
+#endif
             if (group.isDeleted)
                 return;
             PermissionsPlayerData playerData = (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
@@ -263,6 +314,9 @@ namespace JanSharp.Internal
 
         public override void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendSetPermissionValueIA");
+#endif
             if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
                 return;
             lockstep.WriteSmallUInt(group.id);
@@ -275,6 +329,9 @@ namespace JanSharp.Internal
         [LockstepInputAction(nameof(setPermissionValueIAId))]
         public void OnSetPermissionValueIA()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnSetPermissionValueIA");
+#endif
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
                 return;
@@ -285,6 +342,9 @@ namespace JanSharp.Internal
 
         public override void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS");
+#endif
             if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
                 return;
             SetPermissionValueInGS(group, ((PermissionDefinition)defToken.Reference).index, value);
@@ -292,6 +352,9 @@ namespace JanSharp.Internal
 
         private void SetPermissionValueInGS(PermissionGroup group, int permissionDefIndex, bool value)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS");
+#endif
             bool[] permissionValues = group.permissionValues;
             bool prevValue = permissionValues[permissionDefIndex];
             if (prevValue == value)
@@ -304,12 +367,18 @@ namespace JanSharp.Internal
 
         private void WritePermissionGroup(PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  WritePermissionGroup");
+#endif
             lockstep.WriteString(group.groupName);
             lockstep.WriteFlags(group.permissionValues);
         }
 
         private PermissionGroup ReadPermissionGroup()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ReadPermissionGroup");
+#endif
             PermissionGroup group = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             string groupName = lockstep.ReadString();
             group.groupName = groupName;
@@ -321,6 +390,9 @@ namespace JanSharp.Internal
 
         private void WritePermissionGroups()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  WritePermissionGroups");
+#endif
             lockstep.WriteSmallUInt((uint)permissionGroupsCount);
             for (int i = 0; i < permissionGroupsCount; i++)
                 WritePermissionGroup(permissionGroups[i]);
@@ -328,6 +400,9 @@ namespace JanSharp.Internal
 
         private void ReadPermissionGroups()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ReadPermissionGroups");
+#endif
             permissionGroupsCount = (int)lockstep.ReadSmallUInt();
             ArrList.EnsureCapacity(ref permissionGroups, permissionGroupsCount);
             for (int i = 0; i < permissionGroupsCount; i++)
@@ -337,6 +412,9 @@ namespace JanSharp.Internal
 
         private void ExportPermissionDefinitionsMetadata()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ExportPermissionDefinitionsMetadata");
+#endif
             foreach (PermissionDefinition def in permissionDefs)
                 lockstep.WriteString(def.internalName);
         }
@@ -355,6 +433,9 @@ namespace JanSharp.Internal
 
         private void ExportPermissionGroupNamesAndIds()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ExportPermissionGroupNamesAndIds");
+#endif
             foreach (PermissionGroup group in permissionGroups)
             {
                 lockstep.WriteString(group.groupName);
@@ -364,6 +445,9 @@ namespace JanSharp.Internal
 
         private void ImportPermissionGroupNamesAndIds(int count)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionGroupNamesAndIds");
+#endif
             int capacity = ArrList.MinCapacity;
             while (capacity < count)
                 capacity *= 2;
@@ -382,6 +466,9 @@ namespace JanSharp.Internal
                 importedGroups[i] = group;
                 groupsByImportedId.Add(importedId, group);
                 groupsToKeepLut.Add(group, true);
+#if PERMISSION_SYSTEM_DEBUG
+                Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionGroupNamesAndIds (inner) - importedId: {importedId}, group.id: {group.id}");
+#endif
             }
 
             // For the sake of the api, delete existing groups even though they could've been reused by renaming them.
@@ -397,12 +484,18 @@ namespace JanSharp.Internal
 
         private void ExportPermissionGroupFlags()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ExportPermissionGroupFlags");
+#endif
             foreach (PermissionGroup group in permissionGroups)
                 lockstep.WriteFlags(group.permissionValues);
         }
 
         private void ImportPermissionGroupFlags(int importedDefsCount, int[] defsCorrespondingImportedIndex)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionGroupFlags");
+#endif
             bool[] importedFlags = new bool[importedDefsCount];
             foreach (PermissionGroup group in permissionGroups)
             {
@@ -419,12 +512,23 @@ namespace JanSharp.Internal
 
         private void ResolvePlayerPermissionData(DataDictionary groupsById)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData");
+#endif
             foreach (PermissionsPlayerData playerData in playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData)))
+            {
+#if PERMISSION_SYSTEM_DEBUG
+                Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData (inner) - playerData.core.displayName: {playerData.core.displayName}, playerData.deserializedId: {playerData.deserializedId}");
+#endif
                 playerData.permissionGroup = (PermissionGroup)groupsById[playerData.deserializedId].Reference;
+            }
         }
 
         private void Export()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  Export");
+#endif
             lockstep.WriteSmallUInt((uint)permissionDefsCount);
             ExportPermissionDefinitionsMetadata();
             lockstep.WriteSmallUInt((uint)permissionGroupsCount);
@@ -434,6 +538,9 @@ namespace JanSharp.Internal
 
         private void Import()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  Import");
+#endif
             int importedDefsCount = (int)lockstep.ReadSmallUInt();
             int[] correspondingImportedDefIndexMap = ImportPermissionDefinitionsMetadata(importedDefsCount);
             int importedGroupsCount = (int)lockstep.ReadSmallUInt();
@@ -446,11 +553,17 @@ namespace JanSharp.Internal
         [LockstepEvent(LockstepEventType.OnImportFinished)]
         public void OnImportFinished()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinished");
+#endif
             groupsByImportedId = null;
         }
 
         public override void SerializeGameState(bool isExport, LockstepGameStateOptionsData exportOptions)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SerializeGameState");
+#endif
             if (isExport)
             {
                 Export();
@@ -462,6 +575,9 @@ namespace JanSharp.Internal
 
         public override string DeserializeGameState(bool isImport, uint importedDataVersion, LockstepGameStateOptionsData importOptions)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  DeserializeGameState");
+#endif
             if (isImport)
             {
                 Import();
@@ -509,6 +625,9 @@ namespace JanSharp.Internal
 
         private void RaiseOnPermissionGroupDuplicated(PermissionGroup createdPermissionGroup, PermissionGroup createdPermissionGroupDuplicationSource)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionGroupDuplicated");
+#endif
             this.createdPermissionGroup = createdPermissionGroup;
             this.createdPermissionGroupDuplicationSource = createdPermissionGroupDuplicationSource;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
@@ -519,6 +638,9 @@ namespace JanSharp.Internal
 
         private void RaiseOnPermissionGroupDeleted(PermissionGroup deletedPermissionGroup)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionGroupDeleted");
+#endif
             this.deletedPermissionGroup = deletedPermissionGroup;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
             JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDeletedListeners, nameof(PermissionsEventType.OnPermissionGroupDeleted));
@@ -527,6 +649,9 @@ namespace JanSharp.Internal
 
         private void RaiseOnPermissionGroupRenamed(PermissionGroup renamedPermissionGroup, string previousPermissionGroupName)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionGroupRenamed");
+#endif
             this.renamedPermissionGroup = renamedPermissionGroup;
             this.previousPermissionGroupName = previousPermissionGroupName;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
@@ -537,6 +662,9 @@ namespace JanSharp.Internal
 
         private void RaiseOnPlayerPermissionGroupChanged(PermissionsPlayerData playerDataForEvent, PermissionGroup previousPlayerPermissionGroup)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPlayerPermissionGroupChanged");
+#endif
             this.playerDataForEvent = playerDataForEvent;
             this.previousPlayerPermissionGroup = previousPlayerPermissionGroup;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
@@ -547,6 +675,9 @@ namespace JanSharp.Internal
 
         private void RaiseOnPermissionValueChanged(PermissionGroup changedPermissionGroup, PermissionDefinition changedPermission)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionValueChanged");
+#endif
             this.changedPermissionGroup = changedPermissionGroup;
             this.changedPermission = changedPermission;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.

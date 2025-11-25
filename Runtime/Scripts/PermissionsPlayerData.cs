@@ -12,7 +12,7 @@ namespace JanSharp
         public override uint DataVersion => 0u;
         public override uint LowestSupportedDataVersion => 0u;
 
-        [HideInInspector][SerializeField][SingletonReference] private PermissionManager permissionManager;
+        [HideInInspector][SerializeField][SingletonReference] private PermissionManagerAPI permissionManager;
 
         #region GameState
         [System.NonSerialized] public PermissionGroup permissionGroup;
@@ -24,7 +24,7 @@ namespace JanSharp
         {
             if (isAboutToBeImported)
                 return;
-            permissionGroup = permissionManager.defaultPermissionGroup;
+            permissionGroup = permissionManager.DefaultPermissionGroup;
         }
 
         public override bool PersistPlayerDataWhileOffline()

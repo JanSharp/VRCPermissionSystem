@@ -2,12 +2,12 @@
 using UnityEngine;
 using VRC.SDK3.Data;
 
-namespace JanSharp
+namespace JanSharp.Internal
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     [LockstepGameStateDependency(typeof(PlayerDataManagerAPI))]
-    [SingletonScript("fe2230975d59bf380865519bc62b6a3a")] // Runtime/Prefabs/PermissionManager.prefab
-    public class PermissionManager : LockstepGameState
+    [CustomRaisedEventsDispatcher(typeof(PermissionsEventAttribute), typeof(PermissionsEventType))]
+    public class PermissionManager : PermissionManagerAPI
     {
         public override string GameStateInternalName => "jansharp.permission-system";
         public override string GameStateDisplayName => "Permission System";
@@ -22,23 +22,42 @@ namespace JanSharp
 
         #region GameState
         private uint nextGroupId = 1u;
-        [System.NonSerialized] public PermissionGroup defaultPermissionGroup;
+        private PermissionGroup defaultPermissionGroup;
+        public override PermissionGroup DefaultPermissionGroup => defaultPermissionGroup;
         private PermissionGroup[] permissionGroups = new PermissionGroup[ArrList.MinCapacity];
         private DataDictionary groupsById = new DataDictionary();
         private DataDictionary groupsByName = new DataDictionary();
         private int permissionGroupsCount = 0;
+
+        /// <summary>Read Only.</summary>
         [BuildTimeIdAssignment(nameof(permissionDefIds), nameof(highestPermissionDefId))]
-        [HideInInspector][SerializeField] private PermissionDefinition[] permissionDefs;
+        [HideInInspector] public PermissionDefinition[] permissionDefs;
+        public override PermissionDefinition[] PermissionDefinitions => permissionDefs;
         [HideInInspector][SerializeField] private uint[] permissionDefIds; // TODO: unused
         [HideInInspector][SerializeField] private uint highestPermissionDefId; // TODO: unused
         private int permissionDefsCount;
         private DataDictionary permissionDefsByInternalName = new DataDictionary();
+
+        private int playerDataClassNameIndex;
         #endregion
+
+        public PermissionGroup[] PermissionGroups
+        {
+            get
+            {
+                PermissionGroup[] result = new PermissionGroup[permissionGroupsCount];
+                System.Array.Copy(permissionGroups, result, permissionGroupsCount);
+                return result;
+            }
+        }
+        public override PermissionGroup GetPermissionGroup(int index) => permissionGroups[index];
+        public override int PermissionGroupsCount => permissionGroupsCount;
 
         private DataDictionary groupsByImportedId;
 
         private void Start()
         {
+            playerDataManager.RegisterCustomPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             permissionDefsCount = permissionDefs.Length;
             for (int i = 0; i < permissionDefsCount; i++)
             {
@@ -48,9 +67,12 @@ namespace JanSharp
             }
         }
 
-        [LockstepEvent(LockstepEventType.OnInit)]
+        // Must initialize before PlayerDataManager in order for the PermissionsPlayerData to init properly.
+        [LockstepEvent(LockstepEventType.OnInit, Order = -20000)]
         public void OnInit()
         {
+            playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
+
             defaultPermissionGroup = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             defaultPermissionGroup.isDefault = true;
             defaultPermissionGroup.groupName = PermissionGroup.DefaultGroupName;
@@ -63,11 +85,11 @@ namespace JanSharp
             RegisterCreatedPermissionGroup(defaultPermissionGroup);
         }
 
-        private PermissionGroup CreatePermissionGroup(string groupName)
+        public override PermissionGroup CreatePermissionGroupInGS(string groupName)
         {
             PermissionGroup group = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             group.groupName = groupName;
-            defaultPermissionGroup.id = nextGroupId++;
+            group.id = nextGroupId++;
             bool[] permissionValues = new bool[permissionDefsCount];
             group.permissionValues = permissionValues;
             defaultPermissionGroup.permissionValues.CopyTo(permissionValues, index: 0);
@@ -78,7 +100,7 @@ namespace JanSharp
         private void RegisterCreatedPermissionGroup(PermissionGroup group)
         {
             ArrList.Add(ref permissionGroups, ref permissionGroupsCount, group);
-            groupsById.Add(group.id, defaultPermissionGroup);
+            groupsById.Add(group.id, group);
             groupsByName.Add(group.groupName, group);
         }
 
@@ -88,6 +110,29 @@ namespace JanSharp
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);
             group.DecrementRefsCount();
+        }
+
+        public override void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group)
+        {
+            lockstep.WriteSmallUInt(corePlayerData.persistentId); // playerId would not work for offline players.
+            lockstep.WriteSmallUInt(group.id);
+            lockstep.SendInputAction(setPlayerPermissionGroupIAId);
+        }
+
+        [HideInInspector][SerializeField] private uint setPlayerPermissionGroupIAId;
+        [LockstepInputAction(nameof(setPlayerPermissionGroupIAId))]
+        public void OnSetPlayerPermissionGroupIA()
+        {
+            uint persistentId = lockstep.ReadSmallUInt();
+            if (!playerDataManager.TryGetCorePlayerDataForPersistentId(persistentId, out CorePlayerData corePlayerData))
+                return;
+            uint groupId = lockstep.ReadSmallUInt();
+            if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
+                return;
+            PermissionsPlayerData playerData = (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
+            PermissionGroup prevGroup = playerData.permissionGroup;
+            playerData.permissionGroup = (PermissionGroup)groupToken.Reference;
+            RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
         }
 
         private void WritePermissionGroup(PermissionGroup group)
@@ -165,7 +210,7 @@ namespace JanSharp
                 uint importedId = lockstep.ReadSmallUInt();
                 PermissionGroup group = groupsByName.TryGetValue(groupName, out DataToken groupToken)
                     ? (PermissionGroup)groupToken.Reference
-                    : CreatePermissionGroup(groupName);
+                    : CreatePermissionGroupInGS(groupName);
                 importedGroups[i] = group;
                 groupsByImportedId.Add(importedId, group);
             }
@@ -259,5 +304,26 @@ namespace JanSharp
             ResolvePlayerPermissionData(groupsById);
             return null;
         }
+
+        #region EventDispatcher
+
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
+
+        private PermissionsPlayerData playerDataForEvent;
+        public override PermissionsPlayerData PlayerDataForEvent => playerDataForEvent;
+        private PermissionGroup previousPlayerPermissionGroup;
+        public override PermissionGroup PreviousPlayerPermissionGroup => previousPlayerPermissionGroup;
+
+        private void RaiseOnPlayerPermissionGroupChanged(PermissionsPlayerData playerDataForEvent, PermissionGroup previousPlayerPermissionGroup)
+        {
+            this.playerDataForEvent = playerDataForEvent;
+            this.previousPlayerPermissionGroup = previousPlayerPermissionGroup;
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPlayerPermissionGroupChangedListeners, nameof(PermissionsEventType.OnPlayerPermissionGroupChanged));
+            this.playerDataForEvent = null; // To prevent misuse of the API.
+            this.previousPlayerPermissionGroup = null; // To prevent misuse of the API.
+        }
+
+        #endregion
     }
 }

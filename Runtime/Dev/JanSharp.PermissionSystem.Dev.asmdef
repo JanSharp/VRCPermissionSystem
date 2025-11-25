@@ -1,0 +1,24 @@
+{
+    "name": "JanSharp.PermissionSystem.Dev",
+    "rootNamespace": "",
+    "references": [
+        "JanSharp.PermissionSystem",
+        "JanSharp.Common",
+        "JanSharp.Lockstep",
+        "JanSharp.PlayerData",
+        "JanSharp.GenericValueEditor",
+        "UdonSharp.Runtime",
+        "VRC.SDK3",
+        "VRC.SDKBase",
+        "VRC.Udon"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

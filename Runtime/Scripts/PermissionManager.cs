@@ -126,7 +126,8 @@ namespace JanSharp.Internal
             group.permissionValues = permissionValues;
             toDuplicate.permissionValues.CopyTo(permissionValues, index: 0);
             RegisterCreatedPermissionGroup(group);
-            RaiseOnPermissionGroupDuplicated(group, toDuplicate);
+            if (!lockstep.IsDeserializingForImport)
+                RaiseOnPermissionGroupDuplicated(group, toDuplicate);
             return group;
         }
 

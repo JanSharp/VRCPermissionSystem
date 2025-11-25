@@ -724,6 +724,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
         type: 3}
+      propertyPath: onPlayerDataCreatedListeners.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
+        type: 3}
+      propertyPath: onPlayerDataDeletedListeners.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
+        type: 3}
       propertyPath: internalNameByClassNameValues.Array.size
       value: 3
       objectReference: {fileID: 0}
@@ -742,6 +752,16 @@ PrefabInstance:
       propertyPath: internalNameByClassNameKeys.Array.data[2]
       value: PlayerHealthAndExpData
       objectReference: {fileID: 0}
+    - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
+        type: 3}
+      propertyPath: onPlayerDataCreatedListeners.Array.data[0]
+      value: 
+      objectReference: {fileID: 421882547}
+    - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
+        type: 3}
+      propertyPath: onPlayerDataDeletedListeners.Array.data[0]
+      value: 
+      objectReference: {fileID: 421882547}
     - target: {fileID: 733954666466056520, guid: 28a5e083347ce2753aa92dfda01bef32,
         type: 3}
       propertyPath: internalNameByClassNameValues.Array.data[0]

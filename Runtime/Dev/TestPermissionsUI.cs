@@ -32,7 +32,10 @@ namespace JanSharp
 
         /// <summary>Weak WannaBeClass reference.</summary>
         private PermissionsPlayerData editingPlayerData;
-        private ButtonWidgetData editingPlayerButton;
+        /// <summary>
+        /// <para><see cref="PermissionsPlayerData"/> playerData => <see cref="ButtonWidgetData"/> playerButton</para>
+        /// </summary>
+        private DataDictionary playerButtonsByPlayerData = new DataDictionary();
 
         /// <summary>
         /// <para><see cref="PermissionGroup"/> group => <see cref="ButtonWidgetData"/> playerGroupButton</para>
@@ -68,7 +71,7 @@ namespace JanSharp
         {
             PopulatePermissionsEditor();
             InitGroupsLists(); // Requires permissions editor to be populated.
-            PopulatePlayerList();
+            DrawPlayerList(); // Requires groups to be populated.
             isInitialized = true;
         }
 
@@ -186,29 +189,42 @@ namespace JanSharp
                 permissionToggles[i].SetValueWithoutNotify(groupValues[i]);
         }
 
-        private void PopulatePlayerList()
+        private void DrawPlayerList()
         {
+            playerButtonsByPlayerData.Clear();
             PermissionsPlayerData[] allPlayerData = playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             int count = allPlayerData.Length;
             ButtonWidgetData[] playerButtons = new ButtonWidgetData[count];
             for (int i = 0; i < count; i++)
-                playerButtons[i] = (ButtonWidgetData)widgets.NewButton(allPlayerData[i].core.displayName)
-                    .SetCustomData(nameof(clickedPlayerData), allPlayerData[i])
-                    .SetListener(this, nameof(OnPlayerButtonClick));
+            {
+                PermissionsPlayerData playerData = allPlayerData[i];
+                playerButtons[i] = (ButtonWidgetData)widgets.NewButton(playerData.core.displayName)
+                    .SetCustomData(nameof(clickedPlayerData), playerData)
+                    .SetListener(this, nameof(OnPlayerButtonClick))
+                    .StdMoveWidget();
+                playerButtonsByPlayerData.Add(playerData, playerButtons[i]);
+            }
             playersEditor.Draw(playerButtons);
 
-            if (editingPlayerButton != null)
-                return;
-            SetEditingPlayer(allPlayerData[0], playerButtons[0]);
+            SetEditingPlayer(editingPlayerData
+                ?? playerDataManager.GetPlayerDataForPlayerId<PermissionsPlayerData>(
+                    nameof(PermissionsPlayerData),
+                    (uint)Networking.LocalPlayer.playerId));
         }
 
-        private void SetEditingPlayer(PermissionsPlayerData playerData, ButtonWidgetData button)
+        private void SetEditingPlayer(PermissionsPlayerData playerData)
         {
-            if (editingPlayerButton != null)
-                editingPlayerButton.Label = editingPlayerData.core.displayName;
-
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] TestPermissionsUI  SetEditingPlayer - playerData.core.displayName: {playerData.core.displayName}");
+#endif
+            ButtonWidgetData button;
+            if (editingPlayerData != null)
+            {
+                button = (ButtonWidgetData)playerButtonsByPlayerData[editingPlayerData].Reference;
+                button.Label = editingPlayerData.core.displayName;
+            }
             editingPlayerData = playerData;
-            editingPlayerButton = button;
+            button = (ButtonWidgetData)playerButtonsByPlayerData[playerData].Reference;
 
             button.Label = $"<b>{playerData.core.displayName}</b>";
 
@@ -217,6 +233,9 @@ namespace JanSharp
 
         private void UpdateSelectedPlayerGroup()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] TestPermissionsUI  UpdateSelectedPlayerGroup - selectedPlayerGroupInUI != null: {selectedPlayerGroupInUI != null}, editingPlayerData.permissionGroup.groupName: {editingPlayerData.permissionGroup.groupName}, playerGroupButtonsByGroup: {playerGroupButtonsByGroup.Count}");
+#endif
             ButtonWidgetData button;
             if (selectedPlayerGroupInUI != null)
             {
@@ -272,7 +291,7 @@ namespace JanSharp
         private PermissionsPlayerData clickedPlayerData;
         public void OnPlayerButtonClick()
         {
-            SetEditingPlayer(clickedPlayerData, playersEditor.GetSendingButton());
+            SetEditingPlayer(clickedPlayerData);
         }
 
         [PermissionsEvent(PermissionsEventType.OnPermissionGroupDuplicated)]
@@ -341,9 +360,25 @@ namespace JanSharp
                     nameof(PermissionsPlayerData),
                     (uint)Networking.LocalPlayer.playerId);
             RedrawGroupsLists();
-            // TODO: Redraw player list.
+            DrawPlayerList();
         }
 
-        // TODO: handle player data getting created and deleted
+        [PlayerDataEvent(PlayerDataEventType.OnPlayerDataCreated)]
+        public void OnPlayerDataCreated()
+        {
+            if (!isInitialized)
+                return;
+            // Who cares about performance!
+            DrawPlayerList();
+        }
+
+        [PlayerDataEvent(PlayerDataEventType.OnPlayerDataDeleted)]
+        public void OnPlayerDataDeleted()
+        {
+            if (!isInitialized)
+                return;
+            // Who cares about performance!
+            DrawPlayerList();
+        }
     }
 }

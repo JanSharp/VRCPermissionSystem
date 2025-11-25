@@ -370,6 +370,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  WritePermissionGroup");
 #endif
+            lockstep.WriteSmallUInt(group.id);
             lockstep.WriteString(group.groupName);
             lockstep.WriteFlags(group.permissionValues);
         }
@@ -380,6 +381,7 @@ namespace JanSharp.Internal
             Debug.Log($"[PermissionSystemDebug] Manager  ReadPermissionGroup");
 #endif
             PermissionGroup group = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
+            group.id = lockstep.ReadSmallUInt();
             string groupName = lockstep.ReadString();
             group.groupName = groupName;
             group.isDefault = groupName == PermissionGroup.DefaultGroupName;
@@ -403,10 +405,10 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  ReadPermissionGroups");
 #endif
-            permissionGroupsCount = (int)lockstep.ReadSmallUInt();
-            ArrList.EnsureCapacity(ref permissionGroups, permissionGroupsCount);
-            for (int i = 0; i < permissionGroupsCount; i++)
-                permissionGroups[i] = ReadPermissionGroup();
+            int count = (int)lockstep.ReadSmallUInt();
+            ArrList.EnsureCapacity(ref permissionGroups, count);
+            for (int i = 0; i < count; i++)
+                RegisterCreatedPermissionGroup(ReadPermissionGroup());
             defaultPermissionGroup = permissionGroups[0];
         }
 

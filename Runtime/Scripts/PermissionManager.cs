@@ -369,6 +369,7 @@ namespace JanSharp.Internal
             PermissionGroup[] importedGroups = new PermissionGroup[capacity];
             groupsByImportedId = new DataDictionary();
             int originalPermissionGroupsCount = permissionGroupsCount; // To skip redundantly processing the new ones later.
+            DataDictionary groupsToKeepLut = new DataDictionary();
 
             for (int i = 0; i < count; i++)
             {
@@ -379,13 +380,14 @@ namespace JanSharp.Internal
                     : DuplicatePermissionGroupInGS(groupName, defaultPermissionGroup);
                 importedGroups[i] = group;
                 groupsByImportedId.Add(importedId, group);
+                groupsToKeepLut.Add(group, true);
             }
 
             // For the sake of the api, delete existing groups even though they could've been reused by renaming them.
             for (int i = originalPermissionGroupsCount - 1; i >= 0; i--)
             {
                 PermissionGroup group = permissionGroups[i];
-                if (!groupsByImportedId.ContainsKey(group.id))
+                if (!groupsToKeepLut.ContainsKey(group))
                     DeletePermissionGroupWithoutCleanup(group);
             }
 

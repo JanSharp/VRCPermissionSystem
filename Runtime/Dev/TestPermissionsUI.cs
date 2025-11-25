@@ -2,6 +2,7 @@
 using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
+using VRC.SDKBase;
 
 namespace JanSharp
 {
@@ -330,7 +331,19 @@ namespace JanSharp
             permissionToggles[index].SetValueWithoutNotify(editingPermissionGroup.permissionValues[index]);
         }
 
-        // TODO: import support
+        [LockstepEvent(LockstepEventType.OnImportFinished)]
+        public void OnImportFinished()
+        {
+            if (editingPermissionGroup == null || editingPermissionGroup.isDeleted)
+                editingPermissionGroup = permissionManager.DefaultPermissionGroup;
+            if (editingPlayerData == null || !editingPlayerData.CheckLiveliness())
+                editingPlayerData = playerDataManager.GetPlayerDataForPlayerId<PermissionsPlayerData>(
+                    nameof(PermissionsPlayerData),
+                    (uint)Networking.LocalPlayer.playerId);
+            RedrawGroupsLists();
+            // TODO: Redraw player list.
+        }
+
         // TODO: handle player data getting created and deleted
     }
 }

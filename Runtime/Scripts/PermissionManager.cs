@@ -520,7 +520,10 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
                 Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData (inner) - playerData.core.displayName: {playerData.core.displayName}, playerData.deserializedId: {playerData.deserializedId}");
 #endif
+                if (playerData.deserializedId == 0u) // Did not get imported.
+                    continue;
                 playerData.permissionGroup = (PermissionGroup)groupsById[playerData.deserializedId].Reference;
+                playerData.deserializedId = 0u;
             }
         }
 

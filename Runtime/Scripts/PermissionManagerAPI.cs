@@ -76,17 +76,6 @@ namespace JanSharp
         public abstract void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group);
 
         /// <summary>
-        /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
-        /// <para>Game state safe.</para>
-        /// </summary>
-        public abstract PermissionsPlayerData PlayerDataForEvent { get; }
-        /// <summary>
-        /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
-        /// <para>Game state safe.</para>
-        /// </summary>
-        public abstract PermissionGroup PreviousPlayerPermissionGroup { get; }
-
-        /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>.</para>
         /// <para>Game state safe.</para>
         /// </summary>
@@ -96,5 +85,16 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         public abstract PermissionGroup CreatedPermissionGroupDuplicationSource { get; }
+
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionsPlayerData PlayerDataForEvent { get; }
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionGroup PreviousPlayerPermissionGroup { get; }
     }
 }

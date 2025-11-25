@@ -85,15 +85,47 @@ namespace JanSharp.Internal
             RegisterCreatedPermissionGroup(defaultPermissionGroup);
         }
 
-        public override PermissionGroup CreatePermissionGroupInGS(string groupName)
+        public override PermissionGroup GetPermissionGroup(string groupName)
         {
+            return groupsByName.TryGetValue(groupName, out DataToken groupToken)
+                ? (PermissionGroup)groupToken.Reference
+                : null;
+        }
+
+        public override void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate)
+        {
+            groupName = groupName.Trim();
+            if (groupName == "")
+                return;
+            lockstep.WriteString(groupName);
+            lockstep.WriteSmallUInt(toDuplicate.id);
+            lockstep.SendInputAction(duplicatePermissionGroupIAId);
+        }
+
+        [HideInInspector][SerializeField] private uint duplicatePermissionGroupIAId;
+        [LockstepInputAction(nameof(duplicatePermissionGroupIAId))]
+        public void OnDuplicatePermissionGroupIA()
+        {
+            string groupName = lockstep.ReadString();
+            uint groupId = lockstep.ReadSmallUInt();
+            if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
+                return;
+            DuplicatePermissionGroupInGS(groupName, (PermissionGroup)groupToken.Reference);
+        }
+
+        public override PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate)
+        {
+            groupName = groupName.Trim();
+            if (groupName == "" || groupsByName.ContainsKey(groupName))
+                return null;
             PermissionGroup group = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             group.groupName = groupName;
             group.id = nextGroupId++;
             bool[] permissionValues = new bool[permissionDefsCount];
             group.permissionValues = permissionValues;
-            defaultPermissionGroup.permissionValues.CopyTo(permissionValues, index: 0);
+            toDuplicate.permissionValues.CopyTo(permissionValues, index: 0);
             RegisterCreatedPermissionGroup(group);
+            RaiseOnPermissionGroupDuplicated(group, toDuplicate);
             return group;
         }
 
@@ -129,9 +161,16 @@ namespace JanSharp.Internal
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
                 return;
+            SetPlayerPermissionGroupInGS(corePlayerData, (PermissionGroup)groupToken.Reference);
+        }
+
+        public override void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group)
+        {
             PermissionsPlayerData playerData = (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
             PermissionGroup prevGroup = playerData.permissionGroup;
-            playerData.permissionGroup = (PermissionGroup)groupToken.Reference;
+            if (prevGroup == group)
+                return;
+            playerData.permissionGroup = group;
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
         }
 
@@ -210,7 +249,7 @@ namespace JanSharp.Internal
                 uint importedId = lockstep.ReadSmallUInt();
                 PermissionGroup group = groupsByName.TryGetValue(groupName, out DataToken groupToken)
                     ? (PermissionGroup)groupToken.Reference
-                    : CreatePermissionGroupInGS(groupName);
+                    : DuplicatePermissionGroupInGS(groupName, defaultPermissionGroup);
                 importedGroups[i] = group;
                 groupsByImportedId.Add(importedId, group);
             }
@@ -307,12 +346,28 @@ namespace JanSharp.Internal
 
         #region EventDispatcher
 
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDuplicatedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
+
+        private PermissionGroup createdPermissionGroup;
+        public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;
+        private PermissionGroup createdPermissionGroupDuplicationSource;
+        public override PermissionGroup CreatedPermissionGroupDuplicationSource => createdPermissionGroupDuplicationSource;
 
         private PermissionsPlayerData playerDataForEvent;
         public override PermissionsPlayerData PlayerDataForEvent => playerDataForEvent;
         private PermissionGroup previousPlayerPermissionGroup;
         public override PermissionGroup PreviousPlayerPermissionGroup => previousPlayerPermissionGroup;
+
+        private void RaiseOnPermissionGroupDuplicated(PermissionGroup createdPermissionGroup, PermissionGroup createdPermissionGroupDuplicationSource)
+        {
+            this.createdPermissionGroup = createdPermissionGroup;
+            this.createdPermissionGroupDuplicationSource = createdPermissionGroupDuplicationSource;
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDuplicatedListeners, nameof(PermissionsEventType.OnPermissionGroupDuplicated));
+            this.createdPermissionGroup = null; // To prevent misuse of the API.
+            this.createdPermissionGroupDuplicationSource = null; // To prevent misuse of the API.
+        }
 
         private void RaiseOnPlayerPermissionGroupChanged(PermissionsPlayerData playerDataForEvent, PermissionGroup previousPlayerPermissionGroup)
         {

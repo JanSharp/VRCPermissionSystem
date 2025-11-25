@@ -1,4 +1,5 @@
-﻿using UdonSharp;
+﻿using System.Text.RegularExpressions;
+using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 
@@ -14,13 +15,18 @@ namespace JanSharp
         public GenericValueEditor permissionsEditor;
         public GenericValueEditor playersEditor;
         public GenericValueEditor playerGroupSelectionEditor;
+        private WidgetData[] groupsEditorWidgets;
+        private GroupingWidgetData groupsEditorGrouping;
 
         private StringFieldWidgetData groupNameField;
         private ToggleFieldWidgetData[] permissionToggles;
 
         /// <summary>Weak WannaBeClass reference.</summary>
         private PermissionGroup editingPermissionGroup;
-        private ButtonWidgetData editingPermissionGroupButton;
+        /// <summary>
+        /// <para><see cref="PermissionGroup"/> group => <see cref="ButtonWidgetData"/> groupButton</para>
+        /// </summary>
+        private DataDictionary groupButtonsByGroup = new DataDictionary();
 
         /// <summary>Weak WannaBeClass reference.</summary>
         private PermissionsPlayerData editingPlayerData;
@@ -30,14 +36,17 @@ namespace JanSharp
         /// <para><see cref="PermissionGroup"/> group => <see cref="ButtonWidgetData"/> playerGroupButton</para>
         /// </summary>
         private DataDictionary playerGroupButtonsByGroup = new DataDictionary();
-        private ButtonWidgetData selectedPlayerGroupButton;
+        /// <summary>Weak WannaBeClass reference.</summary>
+        private PermissionGroup selectedPlayerGroupInUI;
+
+        private bool isInitialized = false;
 
         [LockstepEvent(LockstepEventType.OnInit)]
         public void OnInit()
         {
-            permissionManager.CreatePermissionGroupInGS("Test");
-            PermissionGroup foo = permissionManager.CreatePermissionGroupInGS("Foo");
-            PermissionGroup bar = permissionManager.CreatePermissionGroupInGS("Bar");
+            permissionManager.DuplicatePermissionGroupInGS("Test", permissionManager.DefaultPermissionGroup);
+            PermissionGroup foo = permissionManager.DuplicatePermissionGroupInGS("Foo", permissionManager.DefaultPermissionGroup);
+            PermissionGroup bar = permissionManager.DuplicatePermissionGroupInGS("Bar", permissionManager.DefaultPermissionGroup);
 
             foo.permissionValues[1] = false;
             foo.permissionValues[2] = false;
@@ -58,6 +67,7 @@ namespace JanSharp
             PopulatePermissionsEditor();
             InitGroupsLists(); // Requires permissions editor to be populated.
             PopulatePlayerList();
+            isInitialized = true;
         }
 
         private void PopulatePermissionsEditor()
@@ -90,38 +100,76 @@ namespace JanSharp
                 : group.groupName;
         }
 
-        private void InitGroupsLists()
+        private void GenerateGroupsButtonWidgets(
+            out ButtonWidgetData[] groupButtons,
+            out ButtonWidgetData[] playerGroupButtons)
         {
-            // TODO: Add duplicate and delete buttons as a header.
+            groupButtonsByGroup.Clear();
+            playerGroupButtonsByGroup.Clear();
+
             int count = permissionManager.PermissionGroupsCount;
-            ButtonWidgetData[] groupButtons = new ButtonWidgetData[count];
-            ButtonWidgetData[] playerGroupButtons = new ButtonWidgetData[count];
+            groupButtons = new ButtonWidgetData[count];
+            playerGroupButtons = new ButtonWidgetData[count];
             for (int i = 0; i < count; i++)
             {
                 PermissionGroup group = permissionManager.GetPermissionGroup(i);
                 groupButtons[i] = (ButtonWidgetData)widgets.NewButton(FormatGroupName(group))
                     .SetCustomData(nameof(clickedPermissionGroup), group)
-                    .SetListener(this, nameof(OnPermissionGroupButtonClick));
+                    .SetListener(this, nameof(OnPermissionGroupButtonClick))
+                    .StdMoveWidget();
                 playerGroupButtons[i] = (ButtonWidgetData)widgets.NewButton(group.groupName)
                     .SetCustomData(nameof(clickedPlayerGroup), group)
-                    .SetListener(this, nameof(OnPlayerGroupButtonClick));
+                    .SetListener(this, nameof(OnPlayerGroupButtonClick))
+                    .StdMoveWidget();
+                groupButtonsByGroup.Add(group, groupButtons[i]);
                 playerGroupButtonsByGroup.Add(group, playerGroupButtons[i]);
             }
-            groupsEditor.Draw(groupButtons);
+        }
+
+        private void InitGroupsLists()
+        {
+            GenerateGroupsButtonWidgets(
+                out ButtonWidgetData[] groupButtons,
+                out ButtonWidgetData[] playerGroupButtons);
+
+            groupsEditor.Draw(groupsEditorWidgets = new WidgetData[]
+            {
+                widgets.NewButton("Duplicate").SetListener(this, nameof(OnDuplicateGroupClick)),
+                widgets.NewButton("Delete").SetListener(this, nameof(OnDeleteGroupClick)),
+                widgets.NewLine(),
+                groupsEditorGrouping = (GroupingWidgetData)widgets.NewGrouping().SetChildrenChained(groupButtons),
+            });
             playerGroupSelectionEditor.Draw(playerGroupButtons);
 
             if (editingPermissionGroup != null)
                 return;
-            SetEditingPermissionGroup(permissionManager.DefaultPermissionGroup, groupButtons[0]);
+            SetEditingPermissionGroup(permissionManager.DefaultPermissionGroup);
         }
 
-        private void SetEditingPermissionGroup(PermissionGroup group, ButtonWidgetData button)
+        private void RedrawGroupsLists()
         {
+            GenerateGroupsButtonWidgets(
+                out ButtonWidgetData[] groupButtons,
+                out ButtonWidgetData[] playerGroupButtons);
+
+            groupsEditorGrouping.SetChildren(groupButtons);
+            groupsEditor.Draw(groupsEditorWidgets);
+            playerGroupSelectionEditor.Draw(playerGroupButtons);
+            SetEditingPermissionGroup(editingPermissionGroup);
+            UpdateSelectedPlayerGroup();
+        }
+
+        private void SetEditingPermissionGroup(PermissionGroup group)
+        {
+            ButtonWidgetData button;
             PermissionGroup pervGroup = editingPermissionGroup;
             editingPermissionGroup = group; // Set before calling FormatGroupName.
             if (pervGroup != null)
-                editingPermissionGroupButton.Label = FormatGroupName(pervGroup);
-            editingPermissionGroupButton = button;
+            {
+                button = (ButtonWidgetData)groupButtonsByGroup[pervGroup].Reference;
+                button.Label = FormatGroupName(pervGroup);
+            }
+            button = (ButtonWidgetData)groupButtonsByGroup[group].Reference;
             button.Label = FormatGroupName(group);
 
             groupNameField.Value = group.groupName;
@@ -164,10 +212,30 @@ namespace JanSharp
 
         private void UpdateSelectedPlayerGroup()
         {
-            if (selectedPlayerGroupButton != null)
-                selectedPlayerGroupButton.Label = ((PermissionGroup)selectedPlayerGroupButton.customData).groupName;
-            selectedPlayerGroupButton = (ButtonWidgetData)playerGroupButtonsByGroup[editingPlayerData.permissionGroup].Reference;
-            selectedPlayerGroupButton.Label = $"<b>{editingPlayerData.permissionGroup.groupName}</b>";
+            ButtonWidgetData button;
+            if (selectedPlayerGroupInUI != null)
+            {
+                button = (ButtonWidgetData)playerGroupButtonsByGroup[selectedPlayerGroupInUI].Reference;
+                button.Label = selectedPlayerGroupInUI.groupName;
+            }
+            selectedPlayerGroupInUI = editingPlayerData.permissionGroup;
+            button = (ButtonWidgetData)playerGroupButtonsByGroup[selectedPlayerGroupInUI].Reference;
+            button.Label = $"<b>{selectedPlayerGroupInUI.groupName}</b>";
+        }
+
+        public void OnDuplicateGroupClick()
+        {
+            // Group 0 is the entire matching string. 1 is the first user defined group.
+            string prefix = Regex.Match(editingPermissionGroup.groupName, @"^(.*?)(\s+\d+)?$").Groups[1].Value + " ";
+            int postfix = 1;
+            while (permissionManager.GetPermissionGroup(prefix + postfix) != null)
+                postfix++;
+            permissionManager.SendDuplicatePermissionGroupIA(prefix + postfix, editingPermissionGroup);
+        }
+
+        public void OnDeleteGroupClick()
+        {
+            // TODO: implement
         }
 
         public void OnGroupNameValueChanged()
@@ -184,7 +252,7 @@ namespace JanSharp
         private PermissionGroup clickedPermissionGroup;
         public void OnPermissionGroupButtonClick()
         {
-            SetEditingPermissionGroup(clickedPermissionGroup, groupsEditor.GetSendingButton());
+            SetEditingPermissionGroup(clickedPermissionGroup);
         }
 
         private PermissionGroup clickedPlayerGroup;
@@ -199,10 +267,18 @@ namespace JanSharp
             SetEditingPlayer(clickedPlayerData, playersEditor.GetSendingButton());
         }
 
+        [PermissionsEvent(PermissionsEventType.OnPermissionGroupDuplicated)]
+        public void OnPermissionGroupDuplicated()
+        {
+            if (!isInitialized)
+                return;
+            RedrawGroupsLists();
+        }
+
         [PermissionsEvent(PermissionsEventType.OnPlayerPermissionGroupChanged)]
         public void OnPlayerPermissionGroupChanged()
         {
-            if (permissionManager.PlayerDataForEvent != editingPlayerData)
+            if (!isInitialized || permissionManager.PlayerDataForEvent != editingPlayerData)
                 return;
             UpdateSelectedPlayerGroup();
         }

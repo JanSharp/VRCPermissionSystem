@@ -36,6 +36,7 @@ namespace JanSharp.Internal
         [HideInInspector][SerializeField] private uint[] permissionDefIds; // TODO: unused
         [HideInInspector][SerializeField] private uint highestPermissionDefId; // TODO: unused
         private int permissionDefsCount;
+        /// <summary><see cref="string"/> internalName => <see cref="PermissionDefinition"/> def</summary>
         private DataDictionary permissionDefsByInternalName = new DataDictionary();
 
         private int playerDataClassNameIndex;
@@ -259,6 +260,45 @@ namespace JanSharp.Internal
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
         }
 
+        public override void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value)
+        {
+            if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
+                return;
+            lockstep.WriteSmallUInt(group.id);
+            lockstep.WriteSmallUInt((uint)((PermissionDefinition)defToken.Reference).index);
+            lockstep.WriteFlags(value);
+            lockstep.SendInputAction(setPermissionValueIAId);
+        }
+
+        [HideInInspector][SerializeField] private uint setPermissionValueIAId;
+        [LockstepInputAction(nameof(setPermissionValueIAId))]
+        public void OnSetPermissionValueIA()
+        {
+            uint groupId = lockstep.ReadSmallUInt();
+            if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
+                return;
+            int defIndex = (int)lockstep.ReadSmallUInt();
+            lockstep.ReadFlags(out bool value);
+            SetPermissionValueInGS((PermissionGroup)groupToken.Reference, defIndex, value);
+        }
+
+        public override void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value)
+        {
+            if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
+                return;
+            SetPermissionValueInGS(group, ((PermissionDefinition)defToken.Reference).index, value);
+        }
+
+        private void SetPermissionValueInGS(PermissionGroup group, int permissionDefIndex, bool value)
+        {
+            bool[] permissionValues = group.permissionValues;
+            bool prevValue = permissionValues[permissionDefIndex];
+            if (prevValue == value)
+                return;
+            permissionValues[permissionDefIndex] = value;
+            RaiseOnPermissionValueChanged(group, permissionDefs[permissionDefIndex]);
+        }
+
         #region Serialization
 
         private void WritePermissionGroup(PermissionGroup group)
@@ -439,6 +479,7 @@ namespace JanSharp.Internal
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDeletedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupRenamedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionValueChangedListeners;
 
         private PermissionGroup createdPermissionGroup;
         public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;
@@ -457,6 +498,11 @@ namespace JanSharp.Internal
         public override PermissionsPlayerData PlayerDataForEvent => playerDataForEvent;
         private PermissionGroup previousPlayerPermissionGroup;
         public override PermissionGroup PreviousPlayerPermissionGroup => previousPlayerPermissionGroup;
+
+        private PermissionGroup changedPermissionGroup;
+        public override PermissionGroup ChangedPermissionGroup => changedPermissionGroup;
+        private PermissionDefinition changedPermission;
+        public override PermissionDefinition ChangedPermission => changedPermission;
 
         private void RaiseOnPermissionGroupDuplicated(PermissionGroup createdPermissionGroup, PermissionGroup createdPermissionGroupDuplicationSource)
         {
@@ -494,6 +540,16 @@ namespace JanSharp.Internal
             JanSharp.CustomRaisedEvents.Raise(ref onPlayerPermissionGroupChangedListeners, nameof(PermissionsEventType.OnPlayerPermissionGroupChanged));
             this.playerDataForEvent = null; // To prevent misuse of the API.
             this.previousPlayerPermissionGroup = null; // To prevent misuse of the API.
+        }
+
+        private void RaiseOnPermissionValueChanged(PermissionGroup changedPermissionGroup, PermissionDefinition changedPermission)
+        {
+            this.changedPermissionGroup = changedPermissionGroup;
+            this.changedPermission = changedPermission;
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPermissionValueChangedListeners, nameof(PermissionsEventType.OnPermissionValueChanged));
+            this.changedPermissionGroup = null; // To prevent misuse of the API.
+            this.changedPermission = null; // To prevent misuse of the API.
         }
 
         #endregion

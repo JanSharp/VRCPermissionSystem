@@ -250,7 +250,10 @@ namespace JanSharp
         private string affectedPermissionName;
         public void OnPermissionToggleValueChanged()
         {
-            // TODO: implement
+            permissionManager.SendSetPermissionValueIA(
+                editingPermissionGroup,
+                affectedPermissionName,
+                permissionsEditor.GetSendingToggleField().Value);
         }
 
         private PermissionGroup clickedPermissionGroup;
@@ -309,6 +312,15 @@ namespace JanSharp
             if (!isInitialized || permissionManager.PlayerDataForEvent != editingPlayerData)
                 return;
             UpdateSelectedPlayerGroup();
+        }
+
+        [PermissionsEvent(PermissionsEventType.OnPermissionValueChanged)]
+        public void OnPermissionValueChanged()
+        {
+            if (!isInitialized || permissionManager.ChangedPermissionGroup != editingPermissionGroup)
+                return;
+            int index = permissionManager.ChangedPermission.index;
+            permissionToggles[index].SetValueWithoutNotify(editingPermissionGroup.permissionValues[index]);
         }
 
         // TODO: import support

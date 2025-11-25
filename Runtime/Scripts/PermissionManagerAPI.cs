@@ -33,6 +33,17 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         OnPlayerPermissionGroupChanged,
+        /// <summary>
+        /// <para>Use <see cref="PermissionManagerAPI.ChangedPermissionGroup"/> to get the permission group
+        /// for which a <see cref="PermissionGroup.permissionValues"/> has been changed.</para>
+        /// <para>Use <see cref="PermissionManagerAPI.ChangedPermission"/> to get the permission which has
+        /// been changed.</para>
+        /// <para>Only gets raised if the value actually changed, and since it is either
+        /// <see langword="true"/> or <see langword="false"/> the previous value can be determined quite
+        /// easily. It is the inverse of the current value.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        OnPermissionValueChanged,
     }
 
     [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
@@ -110,6 +121,9 @@ namespace JanSharp
         /// <param name="group"></param>
         public abstract void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group);
 
+        public abstract void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value);
+        public abstract void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value);
+
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>.</para>
         /// <para>Game state safe.</para>
@@ -148,5 +162,16 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         public abstract PermissionGroup PreviousPlayerPermissionGroup { get; }
+
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionValueChanged"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionGroup ChangedPermissionGroup { get; }
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionValueChanged"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionDefinition ChangedPermission { get; }
     }
 }

@@ -188,6 +188,45 @@ namespace JanSharp.Internal
             group.DecrementRefsCount();
         }
 
+        public override void SendRenamePermissionGroupIA(PermissionGroup group, string newGroupName)
+        {
+            if (group.isDefault)
+                return;
+            newGroupName = newGroupName.Trim();
+            // Intentionally not checking if the group already has the same name, because by the time the IA
+            // runs the group may have a different name, making it value to change it back to the current name.
+            if (newGroupName == "")
+                return;
+            lockstep.WriteSmallUInt(group.id);
+            lockstep.WriteString(newGroupName);
+            lockstep.SendInputAction(renamePermissionGroupIAId);
+        }
+
+        [HideInInspector][SerializeField] private uint renamePermissionGroupIAId;
+        [LockstepInputAction(nameof(renamePermissionGroupIAId))]
+        public void OnRenamePermissionGroupIA()
+        {
+            uint groupId = lockstep.ReadSmallUInt();
+            if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
+                return;
+            string newGroupName = lockstep.ReadString();
+            RenamePermissionGroupInGS((PermissionGroup)groupToken.Reference, newGroupName);
+        }
+
+        public override void RenamePermissionGroupInGS(PermissionGroup group, string newGroupName)
+        {
+            if (group.isDefault)
+                return;
+            newGroupName = newGroupName.Trim();
+            if (newGroupName == "" || group.groupName == newGroupName || groupsByName.ContainsKey(newGroupName))
+                return;
+            string prevGroupName = group.groupName;
+            group.groupName = newGroupName;
+            groupsByName.Remove(prevGroupName);
+            groupsByName.Add(newGroupName, group);
+            RaiseOnPermissionGroupRenamed(group, prevGroupName);
+        }
+
         public override void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group)
         {
             lockstep.WriteSmallUInt(corePlayerData.persistentId); // playerId would not work for offline players.
@@ -219,6 +258,8 @@ namespace JanSharp.Internal
             playerData.permissionGroup = group;
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
         }
+
+        #region Serialization
 
         private void WritePermissionGroup(PermissionGroup group)
         {
@@ -390,10 +431,13 @@ namespace JanSharp.Internal
             return null;
         }
 
+        #endregion
+
         #region EventDispatcher
 
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDuplicatedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDeletedListeners;
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupRenamedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
 
         private PermissionGroup createdPermissionGroup;
@@ -403,6 +447,11 @@ namespace JanSharp.Internal
 
         private PermissionGroup deletedPermissionGroup;
         public override PermissionGroup DeletedPermissionGroup => deletedPermissionGroup;
+
+        private PermissionGroup renamedPermissionGroup;
+        public override PermissionGroup RenamedPermissionGroup => renamedPermissionGroup;
+        private string previousPermissionGroupName;
+        public override string PreviousPermissionGroupName => previousPermissionGroupName;
 
         private PermissionsPlayerData playerDataForEvent;
         public override PermissionsPlayerData PlayerDataForEvent => playerDataForEvent;
@@ -425,6 +474,16 @@ namespace JanSharp.Internal
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
             JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDeletedListeners, nameof(PermissionsEventType.OnPermissionGroupDeleted));
             this.deletedPermissionGroup = null; // To prevent misuse of the API.
+        }
+
+        private void RaiseOnPermissionGroupRenamed(PermissionGroup renamedPermissionGroup, string previousPermissionGroupName)
+        {
+            this.renamedPermissionGroup = renamedPermissionGroup;
+            this.previousPermissionGroupName = previousPermissionGroupName;
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupRenamedListeners, nameof(PermissionsEventType.OnPermissionGroupRenamed));
+            this.renamedPermissionGroup = null; // To prevent misuse of the API.
+            this.previousPermissionGroupName = null; // To prevent misuse of the API.
         }
 
         private void RaiseOnPlayerPermissionGroupChanged(PermissionsPlayerData playerDataForEvent, PermissionGroup previousPlayerPermissionGroup)

@@ -18,6 +18,14 @@ namespace JanSharp
         /// </summary>
         OnPermissionGroupDeleted,
         /// <summary>
+        /// <para>Use <see cref="PermissionManagerAPI.RenamedPermissionGroup"/> to get the permission group
+        /// which has been renamed.</para>
+        /// <para>Use <see cref="PermissionManagerAPI.PreviousPermissionGroupName"/> to get the group name the
+        /// permission group had before the rename.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        OnPermissionGroupRenamed,
+        /// <summary>
         /// <para>Use <see cref="PermissionManagerAPI.PlayerDataForEvent"/> to get the player who's
         /// <see cref="PermissionsPlayerData.permissionGroup"/> has changed.</para>
         /// <para>Use <see cref="PermissionManagerAPI.PreviousPlayerPermissionGroup"/> to get the permission
@@ -90,6 +98,9 @@ namespace JanSharp
         /// <param name="groupToMovePlayersTo"></param>
         public abstract void DeletePermissionGroupInGS(PermissionGroup group, PermissionGroup groupToMovePlayersTo);
 
+        public abstract void SendRenamePermissionGroupIA(PermissionGroup group, string newGroupName);
+        public abstract void RenamePermissionGroupInGS(PermissionGroup group, string newGroupName);
+
         public abstract void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group);
         /// <summary>
         /// <para>Raises <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>, so long as the
@@ -115,6 +126,17 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         public abstract PermissionGroup DeletedPermissionGroup { get; }
+
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupRenamed"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionGroup RenamedPermissionGroup { get; }
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupRenamed"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract string PreviousPermissionGroupName { get; }
 
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>

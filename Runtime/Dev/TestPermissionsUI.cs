@@ -244,7 +244,7 @@ namespace JanSharp
 
         public void OnGroupNameValueChanged()
         {
-            // TODO: implement
+            permissionManager.SendRenamePermissionGroupIA(editingPermissionGroup, groupNameField.Value);
         }
 
         private string affectedPermissionName;
@@ -289,6 +289,20 @@ namespace JanSharp
             RedrawGroupsLists();
         }
 
+        [PermissionsEvent(PermissionsEventType.OnPermissionGroupRenamed)]
+        public void OnPermissionGroupRenamed()
+        {
+            if (!isInitialized)
+                return;
+            PermissionGroup renamedGroup = permissionManager.RenamedPermissionGroup;
+            if (renamedGroup == editingPermissionGroup)
+                groupNameField.SetValueWithoutNotify(editingPermissionGroup.groupName);
+            ((ButtonWidgetData)groupButtonsByGroup[renamedGroup].Reference).Label = FormatGroupName(renamedGroup);
+            ((ButtonWidgetData)playerGroupButtonsByGroup[renamedGroup].Reference).Label = renamedGroup == editingPlayerData.permissionGroup
+                ? $"<b>{renamedGroup.groupName}</b>"
+                : renamedGroup.groupName;
+        }
+
         [PermissionsEvent(PermissionsEventType.OnPlayerPermissionGroupChanged)]
         public void OnPlayerPermissionGroupChanged()
         {
@@ -296,5 +310,8 @@ namespace JanSharp
                 return;
             UpdateSelectedPlayerGroup();
         }
+
+        // TODO: import support
+        // TODO: handle player data getting created and deleted
     }
 }

@@ -217,6 +217,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  DeletePermissionGroupWithoutCleanup");
 #endif
+            group.isDeleted = true;
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);

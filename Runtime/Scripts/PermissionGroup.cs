@@ -12,6 +12,7 @@ namespace JanSharp
         [System.NonSerialized] public uint id;
         [System.NonSerialized] public string groupName;
         [System.NonSerialized] public bool[] permissionValues;
+        [System.NonSerialized] public bool isDeleted;
         #endregion
     }
 }

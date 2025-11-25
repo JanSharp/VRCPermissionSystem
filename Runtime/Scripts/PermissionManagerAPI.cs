@@ -12,6 +12,12 @@ namespace JanSharp
         /// </summary>
         OnPermissionGroupDuplicated,
         /// <summary>
+        /// <para>Use <see cref="PermissionManagerAPI.DeletedPermissionGroup"/> to get the permission group
+        /// which has been deleted.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        OnPermissionGroupDeleted,
+        /// <summary>
         /// <para>Use <see cref="PermissionManagerAPI.PlayerDataForEvent"/> to get the player who's
         /// <see cref="PermissionsPlayerData.permissionGroup"/> has changed.</para>
         /// <para>Use <see cref="PermissionManagerAPI.PreviousPlayerPermissionGroup"/> to get the permission
@@ -66,6 +72,24 @@ namespace JanSharp
         /// use.</returns>
         public abstract PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate);
 
+        public abstract void SendDeletePermissionGroupIA(PermissionGroup group, PermissionGroup groupToMovePlayersTo);
+        /// <summary>
+        /// <para>Does nothing if <see cref="PermissionGroup.isDefault"/> is <see langword="true"/> or
+        /// <see cref="PermissionGroup.isDeleted"/> is <see langword="true"/> for the given
+        /// <paramref name="group"/>.</para>
+        /// <para>Every player that was part of the given <paramref name="group"/> gets changed to
+        /// <paramref name="groupToMovePlayersTo"/>, and raises
+        /// <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
+        /// <para>Raises <see cref="PermissionsEventType.OnPermissionGroupDeleted"/> afterwards.</para>
+        /// <para>Sets <see cref="PermissionGroup.isDeleted"/> to <see langword="true"/> before raising any
+        /// events.</para>
+        /// <para>However only removes <paramref name="group"/> from internal data structure at the very end,
+        /// right before raising <see cref="PermissionsEventType.OnPermissionGroupDeleted"/>.</para>
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="groupToMovePlayersTo"></param>
+        public abstract void DeletePermissionGroupInGS(PermissionGroup group, PermissionGroup groupToMovePlayersTo);
+
         public abstract void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group);
         /// <summary>
         /// <para>Raises <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>, so long as the
@@ -85,6 +109,12 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         public abstract PermissionGroup CreatedPermissionGroupDuplicationSource { get; }
+
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDeleted"/>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract PermissionGroup DeletedPermissionGroup { get; }
 
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>

@@ -136,7 +136,51 @@ namespace JanSharp.Internal
             groupsByName.Add(group.groupName, group);
         }
 
-        private void DeletePermissionGroup(PermissionGroup group)
+        public override void SendDeletePermissionGroupIA(PermissionGroup group, PermissionGroup groupToMovePlayersTo)
+        {
+            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
+                return;
+            lockstep.WriteSmallUInt(group.id);
+            lockstep.WriteSmallUInt(groupToMovePlayersTo.id);
+            lockstep.SendInputAction(deletePermissionGroupIAId);
+        }
+
+        [HideInInspector][SerializeField] private uint deletePermissionGroupIAId;
+        [LockstepInputAction(nameof(deletePermissionGroupIAId))]
+        public void OnDeletePermissionGroupIA()
+        {
+            uint groupId = lockstep.ReadSmallUInt();
+            uint groupToMovePlayersToId = lockstep.ReadSmallUInt();
+            if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
+                return;
+            if (!groupsById.TryGetValue(groupToMovePlayersToId, out DataToken groupToMovePlayersToIdToken))
+                return;
+            DeletePermissionGroupInGS(
+                (PermissionGroup)groupToken.Reference,
+                (PermissionGroup)groupToMovePlayersToIdToken.Reference);
+        }
+
+        public override void DeletePermissionGroupInGS(PermissionGroup group, PermissionGroup groupToMovePlayersTo)
+        {
+            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
+                return;
+            group.isDeleted = true;
+            PermissionsPlayerData[] allPlayerData = playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
+            foreach (PermissionsPlayerData playerData in allPlayerData)
+            {
+                if (playerData.permissionGroup != group)
+                    continue;
+                playerData.permissionGroup = groupToMovePlayersTo;
+                RaiseOnPlayerPermissionGroupChanged(playerData, group);
+            }
+            ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
+            groupsById.Remove(group.id);
+            groupsByName.Remove(group.groupName);
+            RaiseOnPermissionGroupDeleted(group);
+            group.DecrementRefsCount();
+        }
+
+        private void DeletePermissionGroupWithoutCleanup(PermissionGroup group)
         {
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
@@ -166,6 +210,8 @@ namespace JanSharp.Internal
 
         public override void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group)
         {
+            if (group.isDeleted)
+                return;
             PermissionsPlayerData playerData = (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
             PermissionGroup prevGroup = playerData.permissionGroup;
             if (prevGroup == group)
@@ -259,7 +305,7 @@ namespace JanSharp.Internal
             {
                 PermissionGroup group = permissionGroups[i];
                 if (!groupsByImportedId.ContainsKey(group.id))
-                    DeletePermissionGroup(group);
+                    DeletePermissionGroupWithoutCleanup(group);
             }
 
             permissionGroups = importedGroups; // To make the order match what was imported.
@@ -347,12 +393,16 @@ namespace JanSharp.Internal
         #region EventDispatcher
 
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDuplicatedListeners;
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupDeletedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
 
         private PermissionGroup createdPermissionGroup;
         public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;
         private PermissionGroup createdPermissionGroupDuplicationSource;
         public override PermissionGroup CreatedPermissionGroupDuplicationSource => createdPermissionGroupDuplicationSource;
+
+        private PermissionGroup deletedPermissionGroup;
+        public override PermissionGroup DeletedPermissionGroup => deletedPermissionGroup;
 
         private PermissionsPlayerData playerDataForEvent;
         public override PermissionsPlayerData PlayerDataForEvent => playerDataForEvent;
@@ -367,6 +417,14 @@ namespace JanSharp.Internal
             JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDuplicatedListeners, nameof(PermissionsEventType.OnPermissionGroupDuplicated));
             this.createdPermissionGroup = null; // To prevent misuse of the API.
             this.createdPermissionGroupDuplicationSource = null; // To prevent misuse of the API.
+        }
+
+        private void RaiseOnPermissionGroupDeleted(PermissionGroup deletedPermissionGroup)
+        {
+            this.deletedPermissionGroup = deletedPermissionGroup;
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDeletedListeners, nameof(PermissionsEventType.OnPermissionGroupDeleted));
+            this.deletedPermissionGroup = null; // To prevent misuse of the API.
         }
 
         private void RaiseOnPlayerPermissionGroupChanged(PermissionsPlayerData playerDataForEvent, PermissionGroup previousPlayerPermissionGroup)

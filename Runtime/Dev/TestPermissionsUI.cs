@@ -18,6 +18,7 @@ namespace JanSharp
         private WidgetData[] groupsEditorWidgets;
         private GroupingWidgetData groupsEditorGrouping;
 
+        private ButtonWidgetData deleteGroupButton;
         private StringFieldWidgetData groupNameField;
         private ToggleFieldWidgetData[] permissionToggles;
 
@@ -134,8 +135,10 @@ namespace JanSharp
 
             groupsEditor.Draw(groupsEditorWidgets = new WidgetData[]
             {
-                widgets.NewButton("Duplicate").SetListener(this, nameof(OnDuplicateGroupClick)),
-                widgets.NewButton("Delete").SetListener(this, nameof(OnDeleteGroupClick)),
+                widgets.NewButton("Duplicate")
+                    .SetListener(this, nameof(OnDuplicateGroupClick)),
+                deleteGroupButton = (ButtonWidgetData)widgets.NewButton("Delete")
+                    .SetListener(this, nameof(OnDeleteGroupClick)),
                 widgets.NewLine(),
                 groupsEditorGrouping = (GroupingWidgetData)widgets.NewGrouping().SetChildrenChained(groupButtons),
             });
@@ -174,6 +177,7 @@ namespace JanSharp
 
             groupNameField.Value = group.groupName;
             groupNameField.Interactable = !group.isDefault;
+            deleteGroupButton.Interactable = !group.isDefault;
 
             int defsCount = permissionManager.PermissionDefinitions.Length;
             bool[] groupValues = editingPermissionGroup.permissionValues;
@@ -235,7 +239,7 @@ namespace JanSharp
 
         public void OnDeleteGroupClick()
         {
-            // TODO: implement
+            permissionManager.SendDeletePermissionGroupIA(editingPermissionGroup, permissionManager.DefaultPermissionGroup);
         }
 
         public void OnGroupNameValueChanged()
@@ -272,6 +276,16 @@ namespace JanSharp
         {
             if (!isInitialized)
                 return;
+            RedrawGroupsLists();
+        }
+
+        [PermissionsEvent(PermissionsEventType.OnPermissionGroupDeleted)]
+        public void OnPermissionGroupDeleted()
+        {
+            if (!isInitialized)
+                return;
+            if (permissionManager.DeletedPermissionGroup == editingPermissionGroup)
+                editingPermissionGroup = permissionManager.DefaultPermissionGroup;
             RedrawGroupsLists();
         }
 

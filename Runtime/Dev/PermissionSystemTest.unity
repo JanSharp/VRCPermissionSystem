@@ -209,6 +209,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 8148522}
+  definitionAssetGuid: d677abad1536859a2b118aa76a83c418
   internalName: core.voice-range-broadcast
   displayName: Voice Range Broadcast
   defaultValue: 0
@@ -669,6 +670,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 186681179}
+  definitionAssetGuid: a118e407eee21ee98bb1b5ced17d8361
   internalName: core.voice-range-yell
   displayName: Voice Range Yell
   defaultValue: 1
@@ -1303,6 +1305,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 367862469}
+  definitionAssetGuid: 2596e38c3b468d6ab9111df916746760
   internalName: core.voice-range-talk
   displayName: Voice Range Talk
   defaultValue: 1
@@ -2721,6 +2724,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 565796607}
+  definitionAssetGuid: 19daf01dafc4919798075a955a7f541e
   internalName: core.voice-range-whisper
   displayName: Voice Range Whisper
   defaultValue: 1
@@ -4179,6 +4183,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1125551523}
+  definitionAssetGuid: 131abcdca81ec1a51b65c124dd819c2b
   internalName: core.voice-range-quiet
   displayName: Voice Range Quiet
   defaultValue: 1
@@ -6188,7 +6193,7 @@ PrefabInstance:
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
       propertyPath: NetworkIDs.Array.size
-      value: 69
+      value: 70
       objectReference: {fileID: 0}
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
@@ -6539,6 +6544,11 @@ PrefabInstance:
         type: 3}
       propertyPath: NetworkIDs.Array.data[68].ID
       value: 78
+      objectReference: {fileID: 0}
+    - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
+        type: 3}
+      propertyPath: NetworkIDs.Array.data[69].ID
+      value: 79
       objectReference: {fileID: 0}
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
@@ -7257,6 +7267,11 @@ PrefabInstance:
       objectReference: {fileID: 821599705}
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
+      propertyPath: NetworkIDs.Array.data[69].gameObject
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
+        type: 3}
       propertyPath: NetworkIDs.Array.data[0].SerializedTypeNames.Array.size
       value: 1
       objectReference: {fileID: 0}
@@ -7598,6 +7613,11 @@ PrefabInstance:
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
       propertyPath: NetworkIDs.Array.data[68].SerializedTypeNames.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
+        type: 3}
+      propertyPath: NetworkIDs.Array.data[69].SerializedTypeNames.Array.size
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
@@ -7948,6 +7968,11 @@ PrefabInstance:
     - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
         type: 3}
       propertyPath: NetworkIDs.Array.data[68].SerializedTypeNames.Array.data[0]
+      value: VRC.Udon.UdonBehaviour
+      objectReference: {fileID: 0}
+    - target: {fileID: 6759095419728963412, guid: 8894fa7e4588a5c4fab98453e558847d,
+        type: 3}
+      propertyPath: NetworkIDs.Array.data[69].SerializedTypeNames.Array.data[0]
       value: VRC.Udon.UdonBehaviour
       objectReference: {fileID: 0}
     - target: {fileID: 8464459589408506562, guid: 8894fa7e4588a5c4fab98453e558847d,
@@ -9326,12 +9351,12 @@ PrefabInstance:
         type: 3}
       propertyPath: permissionDefs.Array.data[0]
       value: 
-      objectReference: {fileID: 8148523}
+      objectReference: {fileID: 565796608}
     - target: {fileID: 8651540747086455185, guid: fe2230975d59bf380865519bc62b6a3a,
         type: 3}
       propertyPath: permissionDefs.Array.data[1]
       value: 
-      objectReference: {fileID: 186681180}
+      objectReference: {fileID: 1125551524}
     - target: {fileID: 8651540747086455185, guid: fe2230975d59bf380865519bc62b6a3a,
         type: 3}
       propertyPath: permissionDefs.Array.data[2]
@@ -9341,12 +9366,12 @@ PrefabInstance:
         type: 3}
       propertyPath: permissionDefs.Array.data[3]
       value: 
-      objectReference: {fileID: 1125551524}
+      objectReference: {fileID: 186681180}
     - target: {fileID: 8651540747086455185, guid: fe2230975d59bf380865519bc62b6a3a,
         type: 3}
       propertyPath: permissionDefs.Array.data[4]
       value: 
-      objectReference: {fileID: 565796608}
+      objectReference: {fileID: 8148523}
     - target: {fileID: 8651540747086455185, guid: fe2230975d59bf380865519bc62b6a3a,
         type: 3}
       propertyPath: setPlayerPermissionGroupIAId

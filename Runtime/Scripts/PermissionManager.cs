@@ -29,12 +29,8 @@ namespace JanSharp.Internal
         private DataDictionary groupsByName = new DataDictionary();
         private int permissionGroupsCount = 0;
 
-        /// <summary>Read Only.</summary>
-        [BuildTimeIdAssignment(nameof(permissionDefIds), nameof(highestPermissionDefId))]
         [HideInInspector] public PermissionDefinition[] permissionDefs;
         public override PermissionDefinition[] PermissionDefinitions => permissionDefs;
-        [HideInInspector][SerializeField] private uint[] permissionDefIds; // TODO: unused
-        [HideInInspector][SerializeField] private uint highestPermissionDefId; // TODO: unused
         private int permissionDefsCount;
         /// <summary><see cref="string"/> internalName => <see cref="PermissionDefinition"/> def</summary>
         private DataDictionary permissionDefsByInternalName = new DataDictionary();

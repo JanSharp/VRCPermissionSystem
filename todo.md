@@ -1,5 +1,5 @@
 
-- [ ] Add build time ordering to permission definitions
+- [x] Add build time ordering to permission definitions
 - [ ] Add ShowObjectByPermission
   - [ ] Support instantiation
 - [ ] Add CustomPermissionResolver

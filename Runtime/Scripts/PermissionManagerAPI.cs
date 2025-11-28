@@ -68,9 +68,10 @@ namespace JanSharp
     public abstract class PermissionManagerAPI : LockstepGameState
     {
         public abstract PermissionGroup DefaultPermissionGroup { get; }
-        public abstract int PermissionGroupsCount { get; }
         public abstract PermissionDefinition[] PermissionDefinitions { get; }
+        public abstract PermissionGroup[] PermissionGroups { get; }
         public abstract PermissionGroup GetPermissionGroup(int index);
+        public abstract int PermissionGroupsCount { get; }
 
         /// <summary>
         /// </summary>

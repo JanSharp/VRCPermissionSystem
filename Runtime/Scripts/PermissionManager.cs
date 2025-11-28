@@ -46,7 +46,7 @@ namespace JanSharp.Internal
         /// <summary><see cref="PermissionResolver"/> resolver => <see langword="true"/></summary>
         private DataDictionary visitedResolvers = new DataDictionary();
 
-        public PermissionGroup[] PermissionGroups
+        public override PermissionGroup[] PermissionGroups
         {
             get
             {

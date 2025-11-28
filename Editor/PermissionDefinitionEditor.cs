@@ -10,7 +10,7 @@ namespace JanSharp
     [InitializeOnLoad]
     public static class PermissionDefinitionOnBuild
     {
-        private static HashSet<string> internalNamesLut = new();
+        private static HashSet<PermissionDefinitionAsset> defAssetsInScene = new();
         private static List<(PermissionDefinition def, PermissionDefinitionAsset asset)> permissionDefsWithAsset = new();
         private static PermissionManager permissionManager;
 
@@ -24,7 +24,7 @@ namespace JanSharp
 
         private static bool OnPreBuild()
         {
-            internalNamesLut.Clear();
+            defAssetsInScene.Clear();
             permissionDefsWithAsset.Clear();
             return true;
         }
@@ -32,7 +32,7 @@ namespace JanSharp
         private static bool OnPostBuild()
         {
             // Cleanup.
-            internalNamesLut.Clear();
+            defAssetsInScene.Clear();
             permissionDefsWithAsset.Clear();
             return true;
         }
@@ -84,21 +84,21 @@ namespace JanSharp
         {
             string definitionAssetGuid = permissionDef.DefinitionAssetGuid;
             if (string.IsNullOrEmpty(definitionAssetGuid)
-                || !PermissionSystemEditorUtil.TryGetPermissionDefAsset(definitionAssetGuid, out permissionDefAsset))
+                || !PermissionSystemEditorUtil.TryGetDefAssetByGuid(definitionAssetGuid, out permissionDefAsset))
             {
                 Debug.LogError($"[PermissionSystem] Invalid permission definition, missing Permission Definition Asset.", permissionDef);
                 permissionDefAsset = null;
                 return false;
             }
 
-            if (internalNamesLut.Contains(permissionDefAsset.internalName))
+            if (defAssetsInScene.Contains(permissionDefAsset))
             {
-                Debug.LogError($"[PermissionSystem] There are multiple permission definitions with the internal "
-                    + $"name '{permissionDefAsset.internalName}'. A permission definition can only be used once in a "
-                    + $"scene, and every permission definition must have a unique internal name.", permissionDef);
+                Debug.LogError($"[PermissionSystem] There are multiple permission definitions using the "
+                    + $"{permissionDefAsset.name} (Internal Name: {permissionDefAsset.internalName}) "
+                    + $"Permission Definition Asset in the scene. They can only be used once in a scene.", permissionDef);
                 return false;
             }
-            internalNamesLut.Add(permissionDefAsset.internalName);
+            defAssetsInScene.Add(permissionDefAsset);
 
             return true;
         }
@@ -156,7 +156,7 @@ namespace JanSharp
         {
             SetPermissionDefAssets(permissionDefAssetGuids
                 .Where(g => !string.IsNullOrEmpty(g))
-                .Select(g => PermissionSystemEditorUtil.TryGetPermissionDefAsset(g, out var defAsset) ? defAsset : null)
+                .Select(g => PermissionSystemEditorUtil.TryGetDefAssetByGuid(g, out var defAsset) ? defAsset : null)
                 .Where(d => d != null)
                 .Distinct()
                 .ToArray());

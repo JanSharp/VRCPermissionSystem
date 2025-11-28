@@ -18,7 +18,7 @@ namespace JanSharp
                 entries.Add(new()
                 {
                     logicalAnd = real.logicalAnds[i],
-                    defAsset = PermissionSystemEditorUtil.TryGetPermissionDefAsset(real.assetGuids[i], out var defAsset)
+                    defAsset = PermissionSystemEditorUtil.TryGetDefAssetByGuid(real.assetGuids[i], out var defAsset)
                         ? defAsset
                         : null,
                 });

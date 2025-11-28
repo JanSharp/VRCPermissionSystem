@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d289ccee25ecd9693b4f805b40fa0577, type: 3}
   m_Name: VoiceRangeYell
   m_EditorClassIdentifier: 
-  internalName: core.voice-range-yell
+  internalName: permissions-dev.voice-range-yell
   displayName: Voice Range Yell
   order: d[voice-range]-l[yell]
   defaultDefaultValue: 1

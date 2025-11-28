@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d289ccee25ecd9693b4f805b40fa0577, type: 3}
   m_Name: VoiceRangeWhisper
   m_EditorClassIdentifier: 
-  internalName: core.voice-range-whisper
+  internalName: permissions-dev.voice-range-whisper
   displayName: Voice Range Whisper
   order: d[voice-range]-f[whisper]
   defaultDefaultValue: 1

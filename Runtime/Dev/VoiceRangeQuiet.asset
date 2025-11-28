@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d289ccee25ecd9693b4f805b40fa0577, type: 3}
   m_Name: VoiceRangeQuiet
   m_EditorClassIdentifier: 
-  internalName: core.voice-range-quiet
+  internalName: permissions-dev.voice-range-quiet
   displayName: Voice Range Quiet
   order: d[voice-range]-h[quiet]
   defaultDefaultValue: 1

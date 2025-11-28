@@ -587,7 +587,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 186681179}
   definitionAssetGuid: a118e407eee21ee98bb1b5ced17d8361
-  internalName: core.voice-range-yell
+  internalName: permissions-dev.voice-range-yell
   displayName: Voice Range Yell
   defaultValue: 1
   resolvers:
@@ -1397,7 +1397,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 367862469}
   definitionAssetGuid: 2596e38c3b468d6ab9111df916746760
-  internalName: core.voice-range-talk
+  internalName: permissions-dev.voice-range-talk
   displayName: Voice Range Talk
   defaultValue: 1
   resolvers:
@@ -2819,7 +2819,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 565796607}
   definitionAssetGuid: 19daf01dafc4919798075a955a7f541e
-  internalName: core.voice-range-whisper
+  internalName: permissions-dev.voice-range-whisper
   displayName: Voice Range Whisper
   defaultValue: 1
   resolvers:
@@ -4281,7 +4281,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1125551523}
   definitionAssetGuid: 131abcdca81ec1a51b65c124dd819c2b
-  internalName: core.voice-range-quiet
+  internalName: permissions-dev.voice-range-quiet
   displayName: Voice Range Quiet
   defaultValue: 1
   resolvers:
@@ -8153,7 +8153,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1893783498}
   definitionAssetGuid: d677abad1536859a2b118aa76a83c418
-  internalName: core.voice-range-broadcast
+  internalName: permissions-dev.voice-range-broadcast
   displayName: Voice Range Broadcast
   defaultValue: 0
   resolvers:

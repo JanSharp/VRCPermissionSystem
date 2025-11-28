@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d289ccee25ecd9693b4f805b40fa0577, type: 3}
   m_Name: VoiceRangeBroadcast
   m_EditorClassIdentifier: 
-  internalName: core.voice-range-broadcast
+  internalName: permissions-dev.voice-range-broadcast
   displayName: Voice Range Broadcast
   order: d[voice-range]-n[broadcast]
   defaultDefaultValue: 0

@@ -27,6 +27,8 @@ namespace JanSharp
 #endif
             if (isAboutToBeImported)
                 return;
+            // Still null inside of OnInit, because PermissionManager OnInit runs after PlayerDataManager OnInit.
+            // PermissionManager OnInit resolves that errors state.
             permissionGroup = permissionManager.DefaultPermissionGroup;
         }
 

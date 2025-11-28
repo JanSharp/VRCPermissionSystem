@@ -15,8 +15,12 @@ namespace JanSharp
         }
 #endif
         [System.NonSerialized] public int index;
-        [HideInInspector] public string internalName;
-        [HideInInspector] public string displayName;
-        [HideInInspector] public bool defaultValue;
+        public string internalName;
+        public string displayName;
+        public bool defaultValue;
+
+        public PermissionResolver[] resolvers;
+
+        [System.NonSerialized] public bool valueForLocalPlayer;
     }
 }

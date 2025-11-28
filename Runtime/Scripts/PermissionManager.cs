@@ -1,6 +1,7 @@
 ﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
+using VRC.SDKBase;
 
 namespace JanSharp.Internal
 {
@@ -38,6 +39,13 @@ namespace JanSharp.Internal
         private int playerDataClassNameIndex;
         #endregion
 
+        private VRCPlayerApi localPlayer;
+        private uint localPlayerId;
+        private PermissionsPlayerData localPlayerData;
+        private PermissionGroup viewWorldAsGroup;
+        /// <summary><see cref="PermissionResolver"/> resolver => <see langword="true"/></summary>
+        private DataDictionary visitedResolvers = new DataDictionary();
+
         public PermissionGroup[] PermissionGroups
         {
             get
@@ -52,11 +60,20 @@ namespace JanSharp.Internal
 
         private DataDictionary groupsByImportedId;
 
+        private PermissionsPlayerData GetPlayerDataForPlayerId(uint playerId)
+        {
+            return (PermissionsPlayerData)playerDataManager
+                .GetCorePlayerDataForPlayerId(playerId)
+                .customPlayerData[playerDataClassNameIndex];
+        }
+
         private void Start()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  Start");
 #endif
+            localPlayer = Networking.LocalPlayer;
+            localPlayerId = (uint)localPlayer.playerId;
             playerDataManager.RegisterCustomPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             permissionDefsCount = permissionDefs.Length;
             for (int i = 0; i < permissionDefsCount; i++)
@@ -68,7 +85,7 @@ namespace JanSharp.Internal
         }
 
         // Must initialize before PlayerDataManager in order for the PermissionsPlayerData to init properly.
-        [LockstepEvent(LockstepEventType.OnInit, Order = -20000)]
+        [LockstepEvent(LockstepEventType.OnInit, Order = -9000)]
         public void OnInit()
         {
 #if PERMISSION_SYSTEM_DEBUG
@@ -82,10 +99,33 @@ namespace JanSharp.Internal
             defaultPermissionGroup.id = nextGroupId++;
             bool[] permissionValues = new bool[permissionDefsCount];
             defaultPermissionGroup.permissionValues = permissionValues;
-            int length = permissionDefsCount;
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < permissionDefsCount; i++)
                 permissionValues[i] = permissionDefs[i].defaultValue;
             RegisterCreatedPermissionGroup(defaultPermissionGroup);
+
+            localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
+            localPlayerData.permissionGroup = defaultPermissionGroup;
+            SetGroupToViewWorldAs(defaultPermissionGroup);
+        }
+
+        private void SetGroupToViewWorldAs(PermissionGroup group)
+        {
+            if (viewWorldAsGroup == group)
+                return;
+            viewWorldAsGroup = group;
+            bool[] permissionValues = group.permissionValues;
+            for (int i = 0; i < permissionDefsCount; i++)
+                permissionDefs[i].valueForLocalPlayer = permissionValues[i];
+            // TODO: Just have a list of all resolvers on the manager itself, which removes the need of a dictionary here.
+            for (int i = 0; i < permissionDefsCount; i++)
+                foreach (PermissionResolver resolver in permissionDefs[i].resolvers)
+                {
+                    if (visitedResolvers.TryGetValue(resolver, out DataToken discard)) // Cannot use _.
+                        continue;
+                    visitedResolvers.Add(resolver, true);
+                    resolver.Resolve();
+                }
+            visitedResolvers.Clear();
         }
 
         public override PermissionGroup GetPermissionGroup(string groupName)
@@ -195,12 +235,8 @@ namespace JanSharp.Internal
             group.isDeleted = true;
             PermissionsPlayerData[] allPlayerData = playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             foreach (PermissionsPlayerData playerData in allPlayerData)
-            {
-                if (playerData.permissionGroup != group)
-                    continue;
-                playerData.permissionGroup = groupToMovePlayersTo;
-                RaiseOnPlayerPermissionGroupChanged(playerData, group);
-            }
+                if (playerData.permissionGroup == group)
+                    SetPlayerDataPermissionGroup(playerData, groupToMovePlayersTo, group);
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);
@@ -303,9 +339,18 @@ namespace JanSharp.Internal
                 return;
             PermissionsPlayerData playerData = (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
             PermissionGroup prevGroup = playerData.permissionGroup;
-            if (prevGroup == group)
-                return;
+            if (prevGroup != group)
+                SetPlayerDataPermissionGroup(playerData, group, prevGroup);
+        }
+
+        private void SetPlayerDataPermissionGroup(PermissionsPlayerData playerData, PermissionGroup group, PermissionGroup prevGroup)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPlayerDataPermissionGroup");
+#endif
             playerData.permissionGroup = group;
+            if (playerData.core.playerId == localPlayerId)
+                SetGroupToViewWorldAs(group);
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
         }
 
@@ -334,7 +379,7 @@ namespace JanSharp.Internal
                 return;
             int defIndex = (int)lockstep.ReadSmallUInt();
             lockstep.ReadFlags(out bool value);
-            SetPermissionValueInGS((PermissionGroup)groupToken.Reference, defIndex, value);
+            SetPermissionValueInGS((PermissionGroup)groupToken.Reference, permissionDefs[defIndex], value);
         }
 
         public override void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value)
@@ -344,20 +389,27 @@ namespace JanSharp.Internal
 #endif
             if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
                 return;
-            SetPermissionValueInGS(group, ((PermissionDefinition)defToken.Reference).index, value);
+            SetPermissionValueInGS(group, (PermissionDefinition)defToken.Reference, value);
         }
 
-        private void SetPermissionValueInGS(PermissionGroup group, int permissionDefIndex, bool value)
+        private void SetPermissionValueInGS(PermissionGroup group, PermissionDefinition permissionDef, bool value)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS");
 #endif
+            int index = permissionDef.index;
             bool[] permissionValues = group.permissionValues;
-            bool prevValue = permissionValues[permissionDefIndex];
+            bool prevValue = permissionValues[index];
             if (prevValue == value)
                 return;
-            permissionValues[permissionDefIndex] = value;
-            RaiseOnPermissionValueChanged(group, permissionDefs[permissionDefIndex]);
+            permissionValues[index] = value;
+            if (group == viewWorldAsGroup)
+            {
+                permissionDef.valueForLocalPlayer = value;
+                foreach (PermissionResolver resolver in permissionDef.resolvers)
+                    resolver.Resolve();
+            }
+            RaiseOnPermissionValueChanged(group, permissionDefs[index]);
         }
 
         #region Serialization
@@ -550,6 +602,8 @@ namespace JanSharp.Internal
             ImportPermissionGroupFlags(importedDefsCount, correspondingImportedDefIndexMap);
 
             ResolvePlayerPermissionData(groupsByImportedId);
+            viewWorldAsGroup = null; // Force refresh even if the group is the same.
+            SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
         [LockstepEvent(LockstepEventType.OnImportFinished)]
@@ -585,10 +639,14 @@ namespace JanSharp.Internal
                 Import();
                 return null;
             }
+
+            localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
+
             nextGroupId = lockstep.ReadSmallUInt();
             ReadPermissionGroups();
 
             ResolvePlayerPermissionData(groupsById);
+            SetGroupToViewWorldAs(localPlayerData.permissionGroup);
             return null;
         }
 

@@ -12,6 +12,7 @@ namespace JanSharp
     {
         private static Dictionary<PermissionDefinitionAsset, PermissionDefinition> defsInSceneByDefAsset = new();
         private static List<(PermissionDefinition def, PermissionDefinitionAsset asset)> permissionDefsWithAsset = new();
+        private static Dictionary<PermissionDefinition, List<PermissionResolver>> dependantResolversByPermissionDef = new();
         private static PermissionManager permissionManager;
         private static bool searchedForCommonDefParent = false;
         private static Transform commonDefParent = null;
@@ -22,13 +23,15 @@ namespace JanSharp
             OnBuildUtil.RegisterAction(OnPreBuild, order: -1003);
             OnBuildUtil.RegisterType<PermissionManager>(OnFetchPermissionManager, order: -1002);
             OnBuildUtil.RegisterTypeCumulative<PermissionDefinition>(OnBuildCumulative, order: -1001);
-            OnBuildUtil.RegisterAction(OnPostBuild, order: 1000);
+            OnBuildUtil.RegisterType<PermissionDefinition>(OnPostBuildPermissionDef, order: 1001);
+            OnBuildUtil.RegisterAction(OnPostBuild, order: 1002);
         }
 
         private static void Reset()
         {
             defsInSceneByDefAsset.Clear();
             permissionDefsWithAsset.Clear();
+            dependantResolversByPermissionDef.Clear();
             searchedForCommonDefParent = false;
             commonDefParent = null;
             markForRerunDueToScriptInstantiationInPostBuild = false;
@@ -46,6 +49,17 @@ namespace JanSharp
                 OnBuildUtil.MarkForRerunDueToScriptInstantiation();
             // Cleanup.
             Reset();
+            return true;
+        }
+
+        private static bool OnPostBuildPermissionDef(PermissionDefinition permissionDef)
+        {
+            SerializedObject so = new(permissionDef);
+            EditorUtil.SetArrayProperty(
+                so.FindProperty("resolvers"),
+                dependantResolversByPermissionDef[permissionDef],
+                (p, v) => p.objectReferenceValue = v);
+            so.ApplyModifiedProperties();
             return true;
         }
 
@@ -82,6 +96,7 @@ namespace JanSharp
             if (!Validate(permissionDef, out PermissionDefinitionAsset permissionDefAsset))
                 return false;
             permissionDefsWithAsset.Add((permissionDef, permissionDefAsset));
+            dependantResolversByPermissionDef.Add(permissionDef, new List<PermissionResolver>());
 
             SerializedObject so = new SerializedObject(permissionDef);
             MirrorTheDefinition(permissionDefAsset, so);
@@ -144,19 +159,22 @@ namespace JanSharp
             commonDefParent = EditorUtil.FindCommonParent(permissionDefsWithAsset.Select(d => d.def.transform));
         }
 
-        public static PermissionDefinition EnsurePermissionDefinitionExists(string guid)
+        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, string guid)
         {
             if (string.IsNullOrEmpty(guid))
                 return null;
             if (PermissionSystemEditorUtil.TryGetDefAssetByGuid(guid, out PermissionDefinitionAsset defAsset))
-                return EnsurePermissionDefinitionExists(defAsset);
+                return RegisterPermissionDefDependency(dependant, defAsset);
             return null;
         }
 
-        public static PermissionDefinition EnsurePermissionDefinitionExists(PermissionDefinitionAsset defAsset)
+        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, PermissionDefinitionAsset defAsset)
         {
             if (defsInSceneByDefAsset.TryGetValue(defAsset, out PermissionDefinition permissionDef))
+            {
+                AddDependant(permissionDef, dependant);
                 return permissionDef;
+            }
             FindCommonDefParent();
             GameObject permissionDefGo = new GameObject(defAsset.name);
             Undo.RegisterCreatedObjectUndo(permissionDefGo, "Add Required Permission Definition To Scene");
@@ -165,8 +183,17 @@ namespace JanSharp
             permissionDef = UdonSharpUndo.AddComponent<PermissionDefinition>(permissionDefGo);
             permissionDef.DefinitionAssetGuid = PermissionSystemEditorUtil.GetAssetGuid(defAsset);
             defsInSceneByDefAsset.Add(defAsset, permissionDef);
+            AddDependant(permissionDef, dependant);
             markForRerunDueToScriptInstantiationInPostBuild = true;
             return permissionDef;
+        }
+
+        private static void AddDependant(PermissionDefinition permissionDef, PermissionResolver dependant)
+        {
+            var resolvers = dependantResolversByPermissionDef[permissionDef];
+            if (resolvers.Contains(dependant))
+                return;
+            resolvers.Add(dependant);
         }
     }
 

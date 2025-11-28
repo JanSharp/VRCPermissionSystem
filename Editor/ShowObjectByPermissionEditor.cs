@@ -30,7 +30,7 @@ namespace JanSharp
             for (int i = 0; i < showObjectByPermission.assetGuids.Length; i++)
             {
                 string guid = showObjectByPermission.assetGuids[i];
-                permissionDefs[i] = PermissionDefinitionOnBuild.EnsurePermissionDefinitionExists(guid);
+                permissionDefs[i] = PermissionDefinitionOnBuild.RegisterPermissionDefDependency(showObjectByPermission, guid);
                 if (permissionDefs[i] != null)
                     continue;
                 result = false;

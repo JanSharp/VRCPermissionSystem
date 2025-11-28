@@ -71,6 +71,9 @@ namespace JanSharp
 
         private static bool OnBuildCumulative(IEnumerable<PermissionDefinition> permissionDefs)
         {
+            if (permissionManager == null) // No permission system in the scene.
+                return true;
+
             bool result = true;
             foreach (PermissionDefinition permissionDef in permissionDefs)
                 result &= OnBuild(permissionDef);

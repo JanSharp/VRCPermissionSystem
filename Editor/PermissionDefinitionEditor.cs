@@ -10,30 +10,42 @@ namespace JanSharp
     [InitializeOnLoad]
     public static class PermissionDefinitionOnBuild
     {
-        private static HashSet<PermissionDefinitionAsset> defAssetsInScene = new();
+        private static Dictionary<PermissionDefinitionAsset, PermissionDefinition> defsInSceneByDefAsset = new();
         private static List<(PermissionDefinition def, PermissionDefinitionAsset asset)> permissionDefsWithAsset = new();
         private static PermissionManager permissionManager;
+        private static bool searchedForCommonDefParent = false;
+        private static Transform commonDefParent = null;
+        private static bool markForRerunDueToScriptInstantiationInPostBuild = false;
 
         static PermissionDefinitionOnBuild()
         {
-            OnBuildUtil.RegisterAction(OnPreBuild, order: -13);
-            OnBuildUtil.RegisterType<PermissionManager>(OnFetchPermissionManager, order: -12);
-            OnBuildUtil.RegisterTypeCumulative<PermissionDefinition>(OnBuildCumulative, order: -11);
-            OnBuildUtil.RegisterAction(OnPostBuild, order: -10);
+            OnBuildUtil.RegisterAction(OnPreBuild, order: -1003);
+            OnBuildUtil.RegisterType<PermissionManager>(OnFetchPermissionManager, order: -1002);
+            OnBuildUtil.RegisterTypeCumulative<PermissionDefinition>(OnBuildCumulative, order: -1001);
+            OnBuildUtil.RegisterAction(OnPostBuild, order: 1000);
+        }
+
+        private static void Reset()
+        {
+            defsInSceneByDefAsset.Clear();
+            permissionDefsWithAsset.Clear();
+            searchedForCommonDefParent = false;
+            commonDefParent = null;
+            markForRerunDueToScriptInstantiationInPostBuild = false;
         }
 
         private static bool OnPreBuild()
         {
-            defAssetsInScene.Clear();
-            permissionDefsWithAsset.Clear();
+            Reset();
             return true;
         }
 
         private static bool OnPostBuild()
         {
+            if (markForRerunDueToScriptInstantiationInPostBuild)
+                OnBuildUtil.MarkForRerunDueToScriptInstantiation();
             // Cleanup.
-            defAssetsInScene.Clear();
-            permissionDefsWithAsset.Clear();
+            Reset();
             return true;
         }
 
@@ -91,14 +103,14 @@ namespace JanSharp
                 return false;
             }
 
-            if (defAssetsInScene.Contains(permissionDefAsset))
+            if (defsInSceneByDefAsset.ContainsKey(permissionDefAsset))
             {
                 Debug.LogError($"[PermissionSystem] There are multiple permission definitions using the "
                     + $"{permissionDefAsset.name} (Internal Name: {permissionDefAsset.internalName}) "
                     + $"Permission Definition Asset in the scene. They can only be used once in a scene.", permissionDef);
                 return false;
             }
-            defAssetsInScene.Add(permissionDefAsset);
+            defsInSceneByDefAsset.Add(permissionDefAsset, permissionDef);
 
             return true;
         }
@@ -120,6 +132,41 @@ namespace JanSharp
             SerializedObject goSo = new SerializedObject(permissionDef.gameObject);
             goSo.FindProperty("m_Name").stringValue = permissionDefAsset.name;
             goSo.ApplyModifiedProperties();
+        }
+
+
+
+        private static void FindCommonDefParent()
+        {
+            if (searchedForCommonDefParent)
+                return;
+            searchedForCommonDefParent = true;
+            commonDefParent = EditorUtil.FindCommonParent(permissionDefsWithAsset.Select(d => d.def.transform));
+        }
+
+        public static PermissionDefinition EnsurePermissionDefinitionExists(string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+                return null;
+            if (PermissionSystemEditorUtil.TryGetDefAssetByGuid(guid, out PermissionDefinitionAsset defAsset))
+                return EnsurePermissionDefinitionExists(defAsset);
+            return null;
+        }
+
+        public static PermissionDefinition EnsurePermissionDefinitionExists(PermissionDefinitionAsset defAsset)
+        {
+            if (defsInSceneByDefAsset.TryGetValue(defAsset, out PermissionDefinition permissionDef))
+                return permissionDef;
+            FindCommonDefParent();
+            GameObject permissionDefGo = new GameObject(defAsset.name);
+            Undo.RegisterCreatedObjectUndo(permissionDefGo, "Add Required Permission Definition To Scene");
+            if (commonDefParent != null)
+                permissionDefGo.transform.SetParent(commonDefParent, worldPositionStays: false);
+            permissionDef = UdonSharpUndo.AddComponent<PermissionDefinition>(permissionDefGo);
+            permissionDef.DefinitionAssetGuid = PermissionSystemEditorUtil.GetAssetGuid(defAsset);
+            defsInSceneByDefAsset.Add(defAsset, permissionDef);
+            markForRerunDueToScriptInstantiationInPostBuild = true;
+            return permissionDef;
         }
     }
 

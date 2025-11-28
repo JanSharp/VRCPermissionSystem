@@ -6,6 +6,48 @@ using UnityEngine;
 
 namespace JanSharp
 {
+    [InitializeOnLoad]
+    public static class ShowObjectByPermissionOnBuild
+    {
+        static ShowObjectByPermissionOnBuild()
+        {
+            OnBuildUtil.RegisterTypeCumulative<ShowObjectByPermission>(OnBuildCumulative);
+        }
+
+        private static bool OnBuildCumulative(IEnumerable<ShowObjectByPermission> showObjectByPermissions)
+        {
+            bool result = true;
+            foreach (var showObjectByPermission in showObjectByPermissions)
+                if (!OnBuild(showObjectByPermission))
+                    result = false;
+            return result;
+        }
+
+        private static bool OnBuild(ShowObjectByPermission showObjectByPermission)
+        {
+            bool result = true;
+            PermissionDefinition[] permissionDefs = new PermissionDefinition[showObjectByPermission.assetGuids.Length];
+            for (int i = 0; i < showObjectByPermission.assetGuids.Length; i++)
+            {
+                string guid = showObjectByPermission.assetGuids[i];
+                permissionDefs[i] = PermissionDefinitionOnBuild.EnsurePermissionDefinitionExists(guid);
+                if (permissionDefs[i] != null)
+                    continue;
+                result = false;
+                Debug.LogError($"[PermissionSystem] A Show Object By Permission component "
+                    + $"({showObjectByPermission.name}) is trying to use a Permission Definition Asset "
+                    + $"in its Conditions which does not exist.", showObjectByPermission);
+            }
+            SerializedObject so = new(showObjectByPermission);
+            EditorUtil.SetArrayProperty(
+                so.FindProperty("permissionDefs"),
+                permissionDefs,
+                (p, v) => p.objectReferenceValue = v);
+            so.ApplyModifiedProperties();
+            return result;
+        }
+    }
+
     internal class ShowObjectByPermissionDummy : ScriptableObject
     {
         public List<ShowObjectByPermissionDummyEntry> entries = new();
@@ -42,7 +84,6 @@ namespace JanSharp
 
         private SerializedObject[] sos;
         private SerializedProperty[] assetGuidsProps;
-        private SerializedProperty[] internalNamesProps;
         private SerializedProperty[] logicalAndsProps;
 
         private ShowObjectByPermissionDummy[] dummies;
@@ -56,14 +97,12 @@ namespace JanSharp
 
             sos = new SerializedObject[targets.Length];
             assetGuidsProps = new SerializedProperty[targets.Length];
-            internalNamesProps = new SerializedProperty[targets.Length];
             logicalAndsProps = new SerializedProperty[targets.Length];
             dummies = new ShowObjectByPermissionDummy[targets.Length];
             for (int i = 0; i < targets.Length; i++)
             {
                 sos[i] = new SerializedObject(targets[i]);
                 assetGuidsProps[i] = sos[i].FindProperty("assetGuids");
-                internalNamesProps[i] = sos[i].FindProperty("internalNames");
                 logicalAndsProps[i] = sos[i].FindProperty("logicalAnds");
                 dummies[i] = CreateInstance<ShowObjectByPermissionDummy>();
                 dummies[i].PopulateFromReal((ShowObjectByPermission)targets[i]);
@@ -145,10 +184,6 @@ namespace JanSharp
                     assetGuidsProps[i],
                     dummies[i].entries,
                     (p, v) => p.stringValue = PermissionSystemEditorUtil.GetAssetGuid(v.defAsset));
-                EditorUtil.SetArrayProperty(
-                    internalNamesProps[i],
-                    dummies[i].entries,
-                    (p, v) => p.stringValue = v.defAsset?.internalName ?? "");
                 EditorUtil.SetArrayProperty(
                     logicalAndsProps[i],
                     dummies[i].entries,

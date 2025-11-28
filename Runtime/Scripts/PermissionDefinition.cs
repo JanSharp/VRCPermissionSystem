@@ -7,7 +7,13 @@ namespace JanSharp
     public class PermissionDefinition : UdonSharpBehaviour
     {
         [SerializeField] private string definitionAssetGuid;
-        public string DefinitionAssetGuid => definitionAssetGuid;
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public string DefinitionAssetGuid
+        {
+            get => definitionAssetGuid;
+            set => definitionAssetGuid = value;
+        }
+#endif
         [System.NonSerialized] public int index;
         [HideInInspector] public string internalName;
         [HideInInspector] public string displayName;

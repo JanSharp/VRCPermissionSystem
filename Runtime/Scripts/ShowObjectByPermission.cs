@@ -13,8 +13,8 @@ namespace JanSharp
     {
         public WhenConditionsAreMetType whenConditionsAreMet;
 
-        public string[] assetGuids;
-        public string[] internalNames;
         public bool[] logicalAnds;
+        public string[] assetGuids;
+        public PermissionDefinition[] permissionDefs;
     }
 }

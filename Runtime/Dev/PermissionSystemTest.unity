@@ -141,7 +141,7 @@ GameObject:
   - component: {fileID: 8148523}
   - component: {fileID: 8148522}
   m_Layer: 0
-  m_Name: core.voice-range-broadcast
+  m_Name: VoiceRangeBroadcast
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -602,7 +602,7 @@ GameObject:
   - component: {fileID: 186681180}
   - component: {fileID: 186681179}
   m_Layer: 0
-  m_Name: core.voice-range-yell
+  m_Name: VoiceRangeYell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1409,7 +1409,7 @@ GameObject:
   - component: {fileID: 367862470}
   - component: {fileID: 367862469}
   m_Layer: 0
-  m_Name: core.voice-range-talk
+  m_Name: VoiceRangeTalk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2828,7 +2828,7 @@ GameObject:
   - component: {fileID: 565796608}
   - component: {fileID: 565796607}
   m_Layer: 0
-  m_Name: core.voice-range-whisper
+  m_Name: VoiceRangeWhisper
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4287,7 +4287,7 @@ GameObject:
   - component: {fileID: 1125551524}
   - component: {fileID: 1125551523}
   m_Layer: 0
-  m_Name: core.voice-range-quiet
+  m_Name: VoiceRangeQuiet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

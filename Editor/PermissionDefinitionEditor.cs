@@ -115,10 +115,10 @@ namespace JanSharp
             PermissionDefinition permissionDef,
             PermissionDefinitionAsset permissionDefAsset)
         {
-            if (permissionDef.name == permissionDefAsset.internalName)
+            if (permissionDef.name == permissionDefAsset.name)
                 return;
             SerializedObject goSo = new SerializedObject(permissionDef.gameObject);
-            goSo.FindProperty("m_Name").stringValue = permissionDefAsset.internalName;
+            goSo.FindProperty("m_Name").stringValue = permissionDefAsset.name;
             goSo.ApplyModifiedProperties();
         }
     }
@@ -196,7 +196,7 @@ namespace JanSharp
             if (shownPermissionDefAsset == null)
                 return;
             SerializedObject goSo = new SerializedObject(targets.Select(t => ((PermissionDefinition)t).gameObject).ToArray());
-            goSo.FindProperty("m_Name").stringValue = permissionDefAsset.internalName;
+            goSo.FindProperty("m_Name").stringValue = permissionDefAsset.name;
             goSo.ApplyModifiedProperties();
         }
 

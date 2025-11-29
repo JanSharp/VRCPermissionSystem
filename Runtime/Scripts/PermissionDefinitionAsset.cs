@@ -2,7 +2,7 @@
 
 namespace JanSharp
 {
-    [CreateAssetMenu(fileName = "Permission", menuName = "Permission Definition", order = 1000)]
+    [CreateAssetMenu(fileName = "Permission", menuName = "Permission Definition", order = 999)]
     public class PermissionDefinitionAsset : ScriptableObject
     {
         public string internalName;

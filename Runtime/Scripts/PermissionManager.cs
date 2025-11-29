@@ -200,7 +200,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  SendDeletePermissionGroupIA");
 #endif
-            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
+            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo || groupToMovePlayersTo.isDeleted)
                 return;
             lockstep.WriteSmallUInt(group.id);
             lockstep.WriteSmallUInt(groupToMovePlayersTo.id);
@@ -218,11 +218,11 @@ namespace JanSharp.Internal
             uint groupToMovePlayersToId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
                 return;
-            if (!groupsById.TryGetValue(groupToMovePlayersToId, out DataToken groupToMovePlayersToIdToken))
+            if (!groupsById.TryGetValue(groupToMovePlayersToId, out DataToken groupToMovePlayersToToken))
                 return;
             DeletePermissionGroupInGS(
                 (PermissionGroup)groupToken.Reference,
-                (PermissionGroup)groupToMovePlayersToIdToken.Reference);
+                (PermissionGroup)groupToMovePlayersToToken.Reference);
         }
 
         public override void DeletePermissionGroupInGS(PermissionGroup group, PermissionGroup groupToMovePlayersTo)
@@ -230,7 +230,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  DeletePermissionGroupInGS");
 #endif
-            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo)
+            if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo || groupToMovePlayersTo.isDeleted)
                 return;
             group.isDeleted = true;
             PermissionsPlayerData[] allPlayerData = playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));

@@ -94,16 +94,18 @@ namespace JanSharp
 
         public abstract void SendDeletePermissionGroupIA(PermissionGroup group, PermissionGroup groupToMovePlayersTo);
         /// <summary>
-        /// <para>Does nothing if <see cref="PermissionGroup.isDefault"/> is <see langword="true"/> or
-        /// <see cref="PermissionGroup.isDeleted"/> is <see langword="true"/> for the given
-        /// <paramref name="group"/>.</para>
+        /// <para>Does nothing if <see cref="PermissionGroup.isDefault"/> is <see langword="true"/> for
+        /// <paramref name="group"/> or <see cref="PermissionGroup.isDeleted"/> is <see langword="true"/> for
+        /// <paramref name="group"/> or <paramref name="group"/> is equal to
+        /// <paramref name="groupToMovePlayersTo"/> or <see cref="PermissionGroup.isDeleted"/> is
+        /// <see langword="true"/> for <paramref name="groupToMovePlayersTo"/>.</para>
         /// <para>Every player that was part of the given <paramref name="group"/> gets changed to
         /// <paramref name="groupToMovePlayersTo"/>, and raises
         /// <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>.</para>
         /// <para>Raises <see cref="PermissionsEventType.OnPermissionGroupDeleted"/> afterwards.</para>
         /// <para>Sets <see cref="PermissionGroup.isDeleted"/> to <see langword="true"/> before raising any
         /// events.</para>
-        /// <para>However only removes <paramref name="group"/> from internal data structure at the very end,
+        /// <para>However only removes <paramref name="group"/> from internal data structures at the very end,
         /// right before raising <see cref="PermissionsEventType.OnPermissionGroupDeleted"/>.</para>
         /// </summary>
         /// <param name="group"></param>

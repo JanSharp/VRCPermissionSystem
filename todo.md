@@ -2,6 +2,7 @@
 - [x] Add build time ordering to permission definitions
 - [x] Add ShowObjectByPermission
   - [ ] Support instantiation
+- [ ] Probably add ShowObjectsByPermission, very very similar to ShowObjectByPermission but affecting a list of game objects
 - [ ] Add CustomPermissionResolver
   - [ ] Support instantiation? Maybe that's up to the deriving class
 - [ ] Add ShowIfAnyChildrenAreShown

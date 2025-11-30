@@ -15,4 +15,4 @@ MonoBehaviour:
   internalName: permissions-dev.voice-range-quiet
   displayName: Voice Range Quiet
   order: d[voice-range]-h[quiet]
-  defaultDefaultValue: 1
+  initialDefaultValue: 1

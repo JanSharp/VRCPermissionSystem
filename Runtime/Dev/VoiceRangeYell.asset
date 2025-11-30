@@ -15,4 +15,4 @@ MonoBehaviour:
   internalName: permissions-dev.voice-range-yell
   displayName: Voice Range Yell
   order: d[voice-range]-l[yell]
-  defaultDefaultValue: 1
+  initialDefaultValue: 1

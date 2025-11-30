@@ -15,4 +15,4 @@ MonoBehaviour:
   internalName: permissions-dev.voice-range-broadcast
   displayName: Voice Range Broadcast
   order: d[voice-range]-n[broadcast]
-  defaultDefaultValue: 0
+  initialDefaultValue: 0

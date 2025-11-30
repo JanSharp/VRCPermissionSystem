@@ -15,4 +15,4 @@ MonoBehaviour:
   internalName: permissions-dev.voice-range-talk
   displayName: Voice Range Talk
   order: d[voice-range]-j[talk]
-  defaultDefaultValue: 1
+  initialDefaultValue: 1

@@ -15,4 +15,4 @@ MonoBehaviour:
   internalName: permissions-dev.voice-range-whisper
   displayName: Voice Range Whisper
   order: d[voice-range]-f[whisper]
-  defaultDefaultValue: 1
+  initialDefaultValue: 1

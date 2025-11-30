@@ -8,6 +8,6 @@ namespace JanSharp
         public string internalName;
         public string displayName;
         public string order;
-        public bool defaultDefaultValue;
+        public bool initialDefaultValue;
     }
 }

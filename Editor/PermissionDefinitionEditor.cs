@@ -212,7 +212,7 @@ namespace JanSharp
         private SerializedProperty internalNameProp;
         private SerializedProperty displayNameProp;
         private SerializedProperty orderProp;
-        private SerializedProperty defaultDefaultValueProp;
+        private SerializedProperty initialDefaultValueProp;
         private PermissionDefinitionAsset shownPermissionDefAsset;
 
         private void OnEnable()
@@ -248,7 +248,7 @@ namespace JanSharp
             internalNameProp = defAssetsSo == null ? null : defAssetsSo.FindProperty(nameof(PermissionDefinitionAsset.internalName));
             displayNameProp = defAssetsSo == null ? null : defAssetsSo.FindProperty(nameof(PermissionDefinitionAsset.displayName));
             orderProp = defAssetsSo == null ? null : defAssetsSo.FindProperty(nameof(PermissionDefinitionAsset.order));
-            defaultDefaultValueProp = defAssetsSo == null ? null : defAssetsSo.FindProperty(nameof(PermissionDefinitionAsset.defaultDefaultValue));
+            initialDefaultValueProp = defAssetsSo == null ? null : defAssetsSo.FindProperty(nameof(PermissionDefinitionAsset.initialDefaultValue));
         }
 
         private bool CompareStringArrays(string[] left, string[] right)
@@ -268,7 +268,7 @@ namespace JanSharp
                 ? new PermissionDefinitionAsset[0]
                 : new PermissionDefinitionAsset[1] { permissionDefAsset });
             definitionAssetGuidProp.stringValue = permissionDefGuid;
-            defaultValueProp.boolValue = permissionDefAsset.defaultDefaultValue;
+            defaultValueProp.boolValue = permissionDefAsset.initialDefaultValue;
 
             if (shownPermissionDefAsset == null)
                 return;
@@ -320,7 +320,7 @@ namespace JanSharp
                 EditorGUILayout.PropertyField(internalNameProp);
                 EditorGUILayout.PropertyField(displayNameProp);
                 EditorGUILayout.PropertyField(orderProp);
-                EditorGUILayout.PropertyField(defaultDefaultValueProp);
+                EditorGUILayout.PropertyField(initialDefaultValueProp);
                 defAssetsSo.ApplyModifiedProperties();
             }
         }

@@ -265,7 +265,7 @@ namespace JanSharp.Internal
                 return;
             newGroupName = newGroupName.Trim();
             // Intentionally not checking if the group already has the same name, because by the time the IA
-            // runs the group may have a different name, making it value to change it back to the current name.
+            // runs the group may have a different name, making it valid to change it back to the current name.
             if (newGroupName == "")
                 return;
             lockstep.WriteSmallUInt(group.id);

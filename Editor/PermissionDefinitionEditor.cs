@@ -186,6 +186,10 @@ namespace JanSharp
             permissionDef = UdonSharpUndo.AddComponent<PermissionDefinition>(permissionDefGo);
             permissionDef.DefinitionAssetGuid = EditorUtil.GetAssetGuidOrEmpty(defAsset);
             defsInSceneByDefAsset.Add(defAsset, permissionDef);
+            // These next 2 lines are pretty pointless because the OnBuildUtil will rerun before this data gets used.
+            // But for the sake of keeping the data structures useful in case anything else would like to use it
+            // at some point, I am keeping this here anyway.
+            dependantResolversByPermissionDef.Add(permissionDef, new List<PermissionResolver>());
             AddDependant(permissionDef, dependant);
             markForRerunDueToScriptInstantiationInPostBuild = true;
             return permissionDef;

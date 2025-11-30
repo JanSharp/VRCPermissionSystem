@@ -183,7 +183,7 @@ namespace JanSharp
                 EditorUtil.SetArrayProperty(
                     assetGuidsProps[i],
                     dummies[i].entries,
-                    (p, v) => p.stringValue = PermissionSystemEditorUtil.GetAssetGuid(v.defAsset));
+                    (p, v) => p.stringValue = EditorUtil.GetAssetGuidOrEmpty(v.defAsset));
                 EditorUtil.SetArrayProperty(
                     logicalAndsProps[i],
                     dummies[i].entries,

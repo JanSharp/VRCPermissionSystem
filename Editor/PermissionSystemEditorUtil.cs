@@ -69,10 +69,5 @@ namespace JanSharp
                 internalNameToPermissionDefAssetLut[defAsset.internalName] = defAsset;
             }
         }
-
-        public static string GetAssetGuid(Object obj)
-            => obj != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out string guid, out long _)
-                ? guid
-                : "";
     }
 }

@@ -184,7 +184,7 @@ namespace JanSharp
             if (commonDefParent != null)
                 permissionDefGo.transform.SetParent(commonDefParent, worldPositionStays: false);
             permissionDef = UdonSharpUndo.AddComponent<PermissionDefinition>(permissionDefGo);
-            permissionDef.DefinitionAssetGuid = PermissionSystemEditorUtil.GetAssetGuid(defAsset);
+            permissionDef.DefinitionAssetGuid = EditorUtil.GetAssetGuidOrEmpty(defAsset);
             defsInSceneByDefAsset.Add(defAsset, permissionDef);
             AddDependant(permissionDef, dependant);
             markForRerunDueToScriptInstantiationInPostBuild = true;
@@ -263,7 +263,7 @@ namespace JanSharp
 
         private void SetPermissionDefAsset(PermissionDefinitionAsset permissionDefAsset)
         {
-            string permissionDefGuid = PermissionSystemEditorUtil.GetAssetGuid(permissionDefAsset);
+            string permissionDefGuid = EditorUtil.GetAssetGuidOrEmpty(permissionDefAsset);
             SetPermissionDefAssets(permissionDefGuid == ""
                 ? new PermissionDefinitionAsset[0]
                 : new PermissionDefinitionAsset[1] { permissionDefAsset });

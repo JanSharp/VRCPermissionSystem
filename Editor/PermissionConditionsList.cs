@@ -13,6 +13,8 @@ namespace JanSharp
         {
             this.name = name;
             entries.Clear();
+            if (logicalAnds == null || assetGuids == null) // Newly created object.
+                return;
             for (int i = 0; i < assetGuids.Length; i++)
                 entries.Add(new()
                 {

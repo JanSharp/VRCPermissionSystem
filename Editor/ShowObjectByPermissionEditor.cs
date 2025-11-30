@@ -25,10 +25,10 @@ namespace JanSharp
         private static bool OnBuild(ShowObjectByPermission showObjectByPermission)
         {
             bool result = true;
-            PermissionDefinition[] permissionDefs = new PermissionDefinition[showObjectByPermission.assetGuids.Length];
-            for (int i = 0; i < showObjectByPermission.assetGuids.Length; i++)
+            PermissionDefinition[] permissionDefs = new PermissionDefinition[showObjectByPermission.AssetGuids.Length];
+            for (int i = 0; i < showObjectByPermission.AssetGuids.Length; i++)
             {
-                string guid = showObjectByPermission.assetGuids[i];
+                string guid = showObjectByPermission.AssetGuids[i];
                 permissionDefs[i] = PermissionDefinitionOnBuild.RegisterPermissionDefDependency(showObjectByPermission, guid);
                 if (permissionDefs[i] != null)
                     continue;
@@ -64,7 +64,7 @@ namespace JanSharp
                 logicalAndsFieldName: "logicalAnds",
                 assetGuidsFieldName: "assetGuids",
                 getLogicalAnds: t => ((ShowObjectByPermission)t).logicalAnds,
-                getAssetGuids: t => ((ShowObjectByPermission)t).assetGuids);
+                getAssetGuids: t => ((ShowObjectByPermission)t).AssetGuids);
         }
 
         public void OnDisable()

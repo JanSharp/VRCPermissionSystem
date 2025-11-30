@@ -15,7 +15,10 @@ namespace JanSharp
         public WhenConditionsAreMetType whenConditionsAreMet;
 
         public bool[] logicalAnds;
-        public string[] assetGuids;
+        [SerializeField] private string[] assetGuids;
+#if UNITY_EDITOR && !COMPILER_UDONSHARP
+        public string[] AssetGuids => assetGuids;
+#endif
         public PermissionDefinition[] permissionDefs;
 
         public override void Resolve()

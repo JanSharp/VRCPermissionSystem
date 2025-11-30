@@ -49,14 +49,14 @@ namespace JanSharp
         [LockstepEvent(LockstepEventType.OnInit)]
         public void OnInit()
         {
-            permissionManager.DuplicatePermissionGroupInGS("Test", permissionManager.DefaultPermissionGroup);
-            PermissionGroup foo = permissionManager.DuplicatePermissionGroupInGS("Foo", permissionManager.DefaultPermissionGroup);
-            PermissionGroup bar = permissionManager.DuplicatePermissionGroupInGS("Bar", permissionManager.DefaultPermissionGroup);
+            // permissionManager.DuplicatePermissionGroupInGS("Test", permissionManager.DefaultPermissionGroup);
+            // PermissionGroup foo = permissionManager.DuplicatePermissionGroupInGS("Foo", permissionManager.DefaultPermissionGroup);
+            // PermissionGroup bar = permissionManager.DuplicatePermissionGroupInGS("Bar", permissionManager.DefaultPermissionGroup);
 
-            foo.permissionValues[1] = false;
-            foo.permissionValues[2] = false;
+            // foo.permissionValues[1] = false;
+            // foo.permissionValues[2] = false;
 
-            bar.permissionValues[2] = false;
+            // bar.permissionValues[2] = false;
 
             InitUI();
         }

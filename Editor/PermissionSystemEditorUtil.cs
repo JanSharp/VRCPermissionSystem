@@ -69,5 +69,33 @@ namespace JanSharp
                 internalNameToPermissionDefAssetLut[defAsset.internalName] = defAsset;
             }
         }
+
+        public static bool OnPermissionConditionsListBuild(
+            PermissionResolver resolverWithConditionsList,
+            string[] assetGuids,
+            string permissionDefsFieldName,
+            string conditionsHeaderName)
+        {
+            bool result = true;
+            PermissionDefinition[] permissionDefs = new PermissionDefinition[assetGuids.Length];
+            for (int i = 0; i < assetGuids.Length; i++)
+            {
+                string guid = assetGuids[i];
+                permissionDefs[i] = PermissionDefinitionOnBuild.RegisterPermissionDefDependency(resolverWithConditionsList, guid);
+                if (permissionDefs[i] != null)
+                    continue;
+                result = false;
+                Debug.LogError($"[PermissionSystem] A {resolverWithConditionsList.GetType().Name} component "
+                    + $"({resolverWithConditionsList.name}) is trying to use a Permission Definition Asset "
+                    + $"in its {conditionsHeaderName} which does not exist.", resolverWithConditionsList);
+            }
+            SerializedObject so = new(resolverWithConditionsList);
+            EditorUtil.SetArrayProperty(
+                so.FindProperty(permissionDefsFieldName),
+                permissionDefs,
+                (p, v) => p.objectReferenceValue = v);
+            so.ApplyModifiedProperties();
+            return result;
+        }
     }
 }

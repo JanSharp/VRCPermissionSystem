@@ -17,32 +17,14 @@ namespace JanSharp
         {
             bool result = true;
             foreach (var showObjectByPermission in showObjectByPermissions)
-                if (!OnBuild(showObjectByPermission))
+                if (!PermissionSystemEditorUtil.OnPermissionConditionsListBuild(
+                    showObjectByPermission,
+                    showObjectByPermission.AssetGuids,
+                    permissionDefsFieldName: "permissionDefs",
+                    conditionsHeaderName: "Conditions"))
+                {
                     result = false;
-            return result;
-        }
-
-        private static bool OnBuild(ShowObjectByPermission showObjectByPermission)
-        {
-            bool result = true;
-            PermissionDefinition[] permissionDefs = new PermissionDefinition[showObjectByPermission.AssetGuids.Length];
-            for (int i = 0; i < showObjectByPermission.AssetGuids.Length; i++)
-            {
-                string guid = showObjectByPermission.AssetGuids[i];
-                permissionDefs[i] = PermissionDefinitionOnBuild.RegisterPermissionDefDependency(showObjectByPermission, guid);
-                if (permissionDefs[i] != null)
-                    continue;
-                result = false;
-                Debug.LogError($"[PermissionSystem] A Show Object By Permission component "
-                    + $"({showObjectByPermission.name}) is trying to use a Permission Definition Asset "
-                    + $"in its Conditions which does not exist.", showObjectByPermission);
-            }
-            SerializedObject so = new(showObjectByPermission);
-            EditorUtil.SetArrayProperty(
-                so.FindProperty("permissionDefs"),
-                permissionDefs,
-                (p, v) => p.objectReferenceValue = v);
-            so.ApplyModifiedProperties();
+                }
             return result;
         }
     }

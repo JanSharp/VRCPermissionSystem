@@ -377,6 +377,10 @@ namespace JanSharp
         {
             if (!isInitialized)
                 return;
+            if (playerDataManager.PlayerDataForEvent == editingPlayerData.core)
+                editingPlayerData = playerDataManager.GetPlayerDataForPlayerId<PermissionsPlayerData>(
+                    nameof(PermissionsPlayerData),
+                    (uint)Networking.LocalPlayer.playerId);
             // Who cares about performance!
             DrawPlayerList();
         }

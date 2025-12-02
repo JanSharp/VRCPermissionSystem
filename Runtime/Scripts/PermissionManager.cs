@@ -487,8 +487,9 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  ExportPermissionGroupNamesAndIds");
 #endif
-            foreach (PermissionGroup group in permissionGroups)
+            for (int i = 0; i < permissionGroupsCount; i++)
             {
+                PermissionGroup group = permissionGroups[i];
                 lockstep.WriteString(group.groupName);
                 lockstep.WriteSmallUInt(group.id);
             }
@@ -538,8 +539,11 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  ExportPermissionGroupFlags");
 #endif
-            foreach (PermissionGroup group in permissionGroups)
+            for (int i = 0; i < permissionGroupsCount; i++)
+            {
+                PermissionGroup group = permissionGroups[i];
                 lockstep.WriteFlags(group.permissionValues);
+            }
         }
 
         private void ImportPermissionGroupFlags(int importedDefsCount, int[] defsCorrespondingImportedIndex)
@@ -548,15 +552,16 @@ namespace JanSharp.Internal
             Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionGroupFlags");
 #endif
             bool[] importedFlags = new bool[importedDefsCount];
-            foreach (PermissionGroup group in permissionGroups)
+            for (int i = 0; i < permissionGroupsCount; i++)
             {
+                PermissionGroup group = permissionGroups[i];
                 lockstep.ReadFlags(importedFlags);
                 bool[] permissionValues = group.permissionValues;
-                for (int i = 0; i < permissionDefsCount; i++)
+                for (int j = 0; j < permissionDefsCount; j++)
                 {
-                    int correspondingImportedIndex = defsCorrespondingImportedIndex[i];
+                    int correspondingImportedIndex = defsCorrespondingImportedIndex[j];
                     if (correspondingImportedIndex != -1)
-                        permissionValues[i] = importedFlags[correspondingImportedIndex];
+                        permissionValues[j] = importedFlags[correspondingImportedIndex];
                 }
             }
         }

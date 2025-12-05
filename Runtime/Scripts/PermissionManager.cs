@@ -6,6 +6,7 @@ using VRC.SDKBase;
 namespace JanSharp.Internal
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
+    [SingletonDependency(typeof(SingletonManager))]
     [LockstepGameStateDependency(typeof(PlayerDataManagerAPI))]
     [CustomRaisedEventsDispatcher(typeof(PermissionsEventAttribute), typeof(PermissionsEventType))]
     public class PermissionManager : PermissionManagerAPI
@@ -46,6 +47,9 @@ namespace JanSharp.Internal
         /// <summary><see cref="PermissionResolver"/> resolver => <see langword="true"/></summary>
         private DataDictionary visitedResolvers = new DataDictionary();
 
+        [HideInInspector][SerializeField] private PermissionResolver[] permissionResolversExistingAtSceneLoad;
+        private DataDictionary permissionResolversExistingAtSceneLoadLut;
+
         public override PermissionGroup[] PermissionGroups
         {
             get
@@ -82,6 +86,7 @@ namespace JanSharp.Internal
                 permissionDef.index = i;
                 permissionDefsByInternalName.Add(permissionDef.internalName, permissionDef);
             }
+            SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
         }
 
         // Must initialize before PlayerDataManager in order for the PermissionsPlayerData to init properly.
@@ -118,13 +123,18 @@ namespace JanSharp.Internal
                 permissionDefs[i].valueForLocalPlayer = permissionValues[i];
             // TODO: Just have a list of all resolvers on the manager itself, which removes the need of a dictionary here.
             for (int i = 0; i < permissionDefsCount; i++)
-                foreach (PermissionResolver resolver in permissionDefs[i].resolvers)
+            {
+                PermissionResolver[] resolvers = permissionDefs[i].resolvers;
+                int resolversCount = permissionDefs[i].resolversCount;
+                for (int j = 0; j < resolversCount; j++)
                 {
-                    if (visitedResolvers.TryGetValue(resolver, out DataToken discard)) // Cannot use _.
+                    PermissionResolver resolver = resolvers[j];
+                    if (resolver == null || visitedResolvers.TryGetValue(resolver, out DataToken discard)) // Cannot use _.
                         continue;
                     visitedResolvers.Add(resolver, true);
                     resolver.Resolve();
                 }
+            }
             visitedResolvers.Clear();
         }
 
@@ -406,10 +416,73 @@ namespace JanSharp.Internal
             if (group == viewWorldAsGroup)
             {
                 permissionDef.valueForLocalPlayer = value;
-                foreach (PermissionResolver resolver in permissionDef.resolvers)
-                    resolver.Resolve();
+                PermissionResolver[] resolvers = permissionDef.resolvers;
+                int resolversCount = permissionDef.resolversCount;
+                for (int i = 0; i < resolversCount; i++)
+                {
+                    PermissionResolver resolver = resolvers[i];
+                    if (resolver != null)
+                        resolver.Resolve();
+                }
             }
             RaiseOnPermissionValueChanged(group, permissionDefs[index]);
+        }
+
+        public override bool ExistedAtSceneLoad(PermissionResolver resolver)
+        {
+            if (permissionResolversExistingAtSceneLoadLut == null)
+            {
+                permissionResolversExistingAtSceneLoadLut = new DataDictionary();
+                foreach (PermissionResolver resolverAtSceneLoad in permissionResolversExistingAtSceneLoad)
+                    if (resolverAtSceneLoad != null)
+                        permissionResolversExistingAtSceneLoadLut.Add(resolverAtSceneLoad, true);
+            }
+            return permissionResolversExistingAtSceneLoadLut.ContainsKey(resolver);
+        }
+
+        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
+        {
+            RegisterResolvers(resolver, permissionDefs, 0, permissionDefs.Length);
+        }
+
+        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
+        {
+            RegisterResolvers(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
+        }
+
+        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
+        {
+            int stop = startIndex + count;
+            for (int i = startIndex; i < stop; i++)
+                permissionDefs[i].RegisterResolver(resolver);
+        }
+
+        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
+        {
+            DeregisterResolvers(resolver, permissionDefs, 0, permissionDefs.Length);
+        }
+
+        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
+        {
+            DeregisterResolvers(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
+        }
+
+        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
+        {
+            int stop = startIndex + count;
+            for (int i = startIndex; i < stop; i++)
+                permissionDefs[i].DeregisterResolver(resolver);
+        }
+
+        private int nextIndexToPrePopulate;
+        public void PrePopulatePermissionDefResolverIndexLutLoop()
+        {
+            // Doing this here rather than at the end makes handling 0 defs easier.
+            if (nextIndexToPrePopulate == permissionDefsCount)
+                return;
+            PermissionDefinition permissionDef = permissionDefs[nextIndexToPrePopulate++];
+            permissionDef.PrePopulateResolverIndexLut();
+            SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
         }
 
         #region Serialization

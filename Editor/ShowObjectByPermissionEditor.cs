@@ -34,11 +34,13 @@ namespace JanSharp
     public class ShowObjectByPermissionEditor : Editor
     {
         private SerializedProperty whenConditionsAreMetProp;
+        private SerializedProperty showWhileLoadingProp;
         private PermissionConditionsList conditionsList;
 
         public void OnEnable()
         {
             whenConditionsAreMetProp = serializedObject.FindProperty("whenConditionsAreMet");
+            showWhileLoadingProp = serializedObject.FindProperty("showWhileLoading");
 
             conditionsList = new PermissionConditionsList(
                 targets: targets,
@@ -61,6 +63,7 @@ namespace JanSharp
 
             serializedObject.Update();
             EditorGUILayout.PropertyField(whenConditionsAreMetProp);
+            EditorGUILayout.PropertyField(showWhileLoadingProp);
             serializedObject.ApplyModifiedProperties();
 
             conditionsList.Draw();

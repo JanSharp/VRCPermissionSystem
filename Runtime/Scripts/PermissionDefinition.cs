@@ -1,5 +1,6 @@
 ﻿using UdonSharp;
 using UnityEngine;
+using VRC.SDK3.Data;
 
 namespace JanSharp
 {
@@ -20,7 +21,47 @@ namespace JanSharp
         public bool defaultValue;
 
         public PermissionResolver[] resolvers;
+        public int resolversCount;
+        private DataDictionary resolverIndexLut;
 
         [System.NonSerialized] public bool valueForLocalPlayer;
+
+        private void CreateResolverIndexLut()
+        {
+            resolverIndexLut = new DataDictionary();
+            for (int i = 0; i < resolversCount; i++)
+                resolverIndexLut.Add(resolvers[i], i);
+        }
+
+        public void PrePopulateResolverIndexLut()
+        {
+            if (resolverIndexLut == null)
+                CreateResolverIndexLut();
+        }
+
+        public void RegisterResolver(PermissionResolver resolver)
+        {
+            if (resolverIndexLut == null)
+                CreateResolverIndexLut();
+            if (resolverIndexLut.ContainsKey(resolver))
+                return;
+            resolverIndexLut.Add(resolver, resolversCount);
+            ArrList.Add(ref resolvers, ref resolversCount, resolver);
+        }
+
+        public void DeregisterResolver(PermissionResolver resolver)
+        {
+            if (resolverIndexLut == null)
+                CreateResolverIndexLut();
+            if (!resolverIndexLut.Remove(resolver, out DataToken indexToken))
+                return;
+            int index = indexToken.Int;
+            resolversCount--;
+            if (index == resolversCount)
+                return;
+            PermissionResolver topResolver = resolvers[resolversCount];
+            resolvers[index] = topResolver;
+            resolverIndexLut[topResolver] = index;
+        }
     }
 }

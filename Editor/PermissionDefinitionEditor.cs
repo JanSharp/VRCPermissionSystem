@@ -54,11 +54,20 @@ namespace JanSharp
 
         private static bool OnPostBuildPermissionDef(PermissionDefinition permissionDef)
         {
+            List<PermissionResolver> list = dependantResolversByPermissionDef[permissionDef];
+            int count = list.Count;
+            int capacity = ArrList.MinCapacity;
+            while (capacity < count)
+                capacity *= 2;
+            for (int i = count; i < capacity; i++)
+                list.Add(null);
+
             SerializedObject so = new(permissionDef);
             EditorUtil.SetArrayProperty(
                 so.FindProperty("resolvers"),
                 dependantResolversByPermissionDef[permissionDef],
                 (p, v) => p.objectReferenceValue = v);
+            so.FindProperty("resolversCount").intValue = count;
             so.ApplyModifiedProperties();
             return true;
         }

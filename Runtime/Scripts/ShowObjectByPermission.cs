@@ -60,14 +60,12 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission  OnDestroy");
 #endif
+            // Null checking just to prevent errors when exiting play mode or leaving the world in VRChat.
+            // Technically also to prevent errors when something put null into the array at runtime.
+            // And technically these errors aren't a problem, but they are annoying.
             foreach (PermissionDefinition permissionDef in permissionDefs)
-            {
-#if UNITY_EDITOR
-                if (permissionDef == null)
-                    return; // Prevent errors when exiting play mode.
-#endif
-                permissionDef.DeregisterResolver(this);
-            }
+                if (permissionDef != null)
+                    permissionDef.DeregisterResolver(this);
         }
 
         public override void Resolve()

@@ -2,7 +2,7 @@
 - [x] Add build time ordering to permission definitions
 - [x] Add ShowObjectByPermission
   - [x] Support instantiation
-- [ ] Add PermissionResolverInstantiationHelper
+- [x] Add PermissionResolverInstantiationHelper
   - list of resolvers
   - inspector button to find all resolvers in children
   - on `Start`, as well as an `InitializeInstantiated` api function, call `InitializeInstantiated` on every resolver in the list

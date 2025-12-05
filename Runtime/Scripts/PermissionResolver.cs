@@ -1,5 +1,4 @@
 using UdonSharp;
-using UnityEngine;
 
 namespace JanSharp
 {
@@ -8,17 +7,20 @@ namespace JanSharp
         /// <summary>
         /// <para>A place to run any logic that needs to run when an object is instantiated rathe than
         /// existing at scene load already.</para>
-        /// <para>Any system instantiating objects must
-        /// <see cref="GameObject.GetComponentsInChildren{T}(bool)"/> with <c>includeInactive</c>
-        /// <see langword="true"/> and then call this function on all these components.</para>
-        /// <para>This sucks. I know. Thank Unity for not giving us any event when an inactive object got
-        /// instantiated. Which is bound to happen if the instantiated object isn't using a prefab, but rather
-        /// a reference to an object in the scene already, in which case the permission resolver may
-        /// deactivate objects (including itself) due to the state of permissions.</para>
-        /// <para>Listening to <c>Start</c> or <c>Awake</c> anyway is likely a good idea anyway. Use
-        /// <see cref="PermissionManagerAPI.ExistedAtSceneLoad(PermissionResolver)"/> to check if the resolver
-        /// already existed at scene load vs if it got instantiated, which could require different (likely
-        /// less) handling than instantiated ones.</para>
+        /// <para>Any system instantiating objects must call this function on every instantiated
+        /// object.</para>
+        /// <para>The <see cref="PermissionResolverInstantiationHelper"/> exists to help with this process,
+        /// as well as automating it entirely in cases where the helper is guaranteed to be active in the
+        /// hierarchy for the newly created object.</para>
+        /// <para>The reason why we cannot rely on any Unity event on the PermissionResolver itself is because
+        /// if it is inactive in the hierarchy well there simply are no Unity events to listen to.</para>
+        /// <para>And it being inactive is effectively guaranteed to happen for PermissionResolvers such as
+        /// the <see cref="ShowObjectByPermission"/> if the object being duplicated is itself an object in the
+        /// scene (not a prefab asset reference), because that PermissionResolver deactivates its own object
+        /// based on permission conditions. And there are cases, such as UI, where not using prefab assets is
+        /// actually preferable (or in the case of input fields literally required, because otherwise VRChat's
+        /// input field popup doesn't pop up, see
+        /// https://feedback.vrchat.com/bug-reports/p/instantiated-input-fields-dont-open-the-vrc-keyboard).</para>
         /// <para>See <see cref="ShowObjectByPermission"/> as an example.</para>
         /// <para>Not game state safe.</para>
         /// </summary>

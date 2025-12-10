@@ -237,7 +237,7 @@ namespace JanSharp
             Debug.Log($"[PermissionSystemDebug] TestPermissionsUI  UpdateSelectedPlayerGroup - selectedPlayerGroupInUI != null: {selectedPlayerGroupInUI != null}, editingPlayerData.permissionGroup.groupName: {editingPlayerData.permissionGroup.groupName}, playerGroupButtonsByGroup: {playerGroupButtonsByGroup.Count}");
 #endif
             ButtonWidgetData button;
-            if (selectedPlayerGroupInUI != null)
+            if (selectedPlayerGroupInUI != null && !selectedPlayerGroupInUI.isDeleted)
             {
                 button = (ButtonWidgetData)playerGroupButtonsByGroup[selectedPlayerGroupInUI].Reference;
                 button.Label = selectedPlayerGroupInUI.groupName;

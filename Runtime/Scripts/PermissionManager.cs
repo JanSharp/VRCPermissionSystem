@@ -89,14 +89,13 @@ namespace JanSharp.Internal
             SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
         }
 
-        // Must initialize before PlayerDataManager in order for the PermissionsPlayerData to init properly.
-        [LockstepEvent(LockstepEventType.OnInit, Order = -9000)]
-        public void OnInit()
+        [PlayerDataEvent(PlayerDataEventType.OnPrePlayerDataManagerInit)]
+        public void OnPrePlayerDataManagerInit()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  OnInit");
+            Debug.Log($"[PermissionSystemDebug] Manager  OnPrePlayerDataManagerInit");
 #endif
-            playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
+            FetchPlayerDataClassNameIndex();
 
             defaultPermissionGroup = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             defaultPermissionGroup.isDefault = true;
@@ -107,14 +106,40 @@ namespace JanSharp.Internal
             for (int i = 0; i < permissionDefsCount; i++)
                 permissionValues[i] = permissionDefs[i].defaultValue;
             RegisterCreatedPermissionGroup(defaultPermissionGroup);
+        }
 
+        [PlayerDataEvent(PlayerDataEventType.OnPostPlayerDataManagerInit)]
+        public void OnPostPlayerDataManagerInit()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnPostPlayerDataManagerInit");
+#endif
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
-            localPlayerData.permissionGroup = defaultPermissionGroup;
             SetGroupToViewWorldAs(defaultPermissionGroup);
+        }
+
+        [LockstepEvent(LockstepEventType.OnClientBeginCatchUp)]
+        public void OnClientBeginCatchUp()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnClientBeginCatchUp");
+#endif
+            FetchPlayerDataClassNameIndex();
+        }
+
+        private void FetchPlayerDataClassNameIndex()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  FetchPlayerDataClassNameIndex");
+#endif
+            playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
         }
 
         private void SetGroupToViewWorldAs(PermissionGroup group)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetGroupToViewWorldAs");
+#endif
             if (viewWorldAsGroup == group)
                 return;
             viewWorldAsGroup = group;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UdonSharp;
 using UnityEditor;
 using UnityEngine;
 
@@ -38,6 +39,11 @@ namespace JanSharp
 
         public static bool TryGetDefAssetByGuid(string permissionDefinitionAssetGuid, out PermissionDefinitionAsset defAsset)
         {
+            if (string.IsNullOrEmpty(permissionDefinitionAssetGuid))
+            {
+                defAsset = null;
+                return false;
+            }
             if (guidToPermissionDefAssetLut.TryGetValue(permissionDefinitionAssetGuid, out defAsset) && defAsset != null)
                 return true;
             FindAllPermissionDefAssets();

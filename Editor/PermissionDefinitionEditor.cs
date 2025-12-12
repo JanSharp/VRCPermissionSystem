@@ -171,22 +171,35 @@ namespace JanSharp
             commonDefParent = EditorUtil.FindCommonParent(permissionDefsWithAsset.Select(d => d.def.transform));
         }
 
-        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, string guid)
+        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, string defAssetGuid)
         {
-            if (string.IsNullOrEmpty(guid))
+            if (string.IsNullOrEmpty(defAssetGuid))
                 return null;
-            if (PermissionSystemEditorUtil.TryGetDefAssetByGuid(guid, out PermissionDefinitionAsset defAsset))
+            if (PermissionSystemEditorUtil.TryGetDefAssetByGuid(defAssetGuid, out PermissionDefinitionAsset defAsset))
                 return RegisterPermissionDefDependency(dependant, defAsset);
             return null;
         }
 
         public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, PermissionDefinitionAsset defAsset)
         {
+            PermissionDefinition permissionDef = GetOrCreatePermissionDef(defAsset);
+            AddDependant(permissionDef, dependant);
+            return permissionDef;
+        }
+
+        public static PermissionDefinition GetOrCreatePermissionDef(string defAssetGuid)
+        {
+            if (string.IsNullOrEmpty(defAssetGuid))
+                return null;
+            if (PermissionSystemEditorUtil.TryGetDefAssetByGuid(defAssetGuid, out PermissionDefinitionAsset defAsset))
+                return GetOrCreatePermissionDef(defAsset);
+            return null;
+        }
+
+        public static PermissionDefinition GetOrCreatePermissionDef(PermissionDefinitionAsset defAsset)
+        {
             if (defsInSceneByDefAsset.TryGetValue(defAsset, out PermissionDefinition permissionDef))
-            {
-                AddDependant(permissionDef, dependant);
                 return permissionDef;
-            }
             FindCommonDefParent();
             GameObject permissionDefGo = new GameObject(defAsset.name);
             Undo.RegisterCreatedObjectUndo(permissionDefGo, "Add Required Permission Definition To Scene");
@@ -200,7 +213,6 @@ namespace JanSharp
             // But for the sake of keeping the data structures useful in case anything else would like to use it
             // at some point, I am keeping this here anyway.
             dependantResolversByPermissionDef.Add(permissionDef, new List<PermissionResolver>());
-            AddDependant(permissionDef, dependant);
             markForRerunDueToScriptInstantiationInPostBuild = true;
             return permissionDef;
         }

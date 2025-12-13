@@ -729,11 +729,20 @@ namespace JanSharp.Internal
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
-        [LockstepEvent(LockstepEventType.OnImportFinished, Order = 10000)]
+        [LockstepEvent(LockstepEventType.OnImportFinished)]
         public void OnImportFinished()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinished");
+#endif
+            if (groupsByImportedId != null)
+                RaiseOnPermissionManagerImportFinished();
+        }
+
+        public void OnLateImportFinished()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnLateImportFinished");
 #endif
             groupsByImportedId = null;
         }
@@ -782,6 +791,7 @@ namespace JanSharp.Internal
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupRenamedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionValueChangedListeners;
+        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionManagerImportFinishedListeners;
 
         private PermissionGroup createdPermissionGroup;
         public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;
@@ -867,6 +877,15 @@ namespace JanSharp.Internal
             JanSharp.CustomRaisedEvents.Raise(ref onPermissionValueChangedListeners, nameof(PermissionsEventType.OnPermissionValueChanged));
             this.changedPermissionGroup = null; // To prevent misuse of the API.
             this.changedPermission = null; // To prevent misuse of the API.
+        }
+
+        private void RaiseOnPermissionManagerImportFinished()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionManagerImportFinished");
+#endif
+            // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
+            JanSharp.CustomRaisedEvents.Raise(ref onPermissionManagerImportFinishedListeners, nameof(PermissionsEventType.OnPermissionManagerImportFinished));
         }
 
         #endregion

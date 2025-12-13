@@ -59,6 +59,7 @@ namespace JanSharp.Internal
                 return result;
             }
         }
+        public override PermissionGroup[] PermissionGroupsRaw => permissionGroups;
         public override int PermissionGroupsCount => permissionGroupsCount;
         public override PermissionGroup GetPermissionGroup(int index) => permissionGroups[index];
         public override PermissionGroup GetPermissionGroup(uint groupId) => (PermissionGroup)groupsById[groupId].Reference;

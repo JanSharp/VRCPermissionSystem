@@ -68,9 +68,29 @@ namespace JanSharp
     public abstract class PermissionManagerAPI : LockstepGameState
     {
         public abstract PermissionGroup DefaultPermissionGroup { get; }
+        /// <summary>
+        /// <para>Game state safe, including order.</para>
+        /// </summary>
         public abstract PermissionDefinition[] PermissionDefinitions { get; }
+        /// <summary>
+        /// <para>Game state safe, including order.</para>
+        /// </summary>
         public abstract PermissionGroup[] PermissionGroups { get; }
+        /// <summary>
+        /// <para>A direct reference to the internal array, which is an <see cref="ArrList"/>, which is to say
+        /// that the <see cref="System.Array.Length"/> of this array cannot be trusted.</para>
+        /// <para>It being an <see cref="ArrList"/> also implies that fetching this property and keeping a
+        /// reference to the returned value can end up referring to a stale no longer used array in the
+        /// future, if the arrays has been grown internally since fetching it.</para>
+        /// <para>The actual amount of elements used of this array is defined via
+        /// <see cref="PermissionGroupsCount"/>.</para>
+        /// <para>Game state safe, including order.</para>
+        /// </summary>
+        public abstract PermissionGroup[] PermissionGroupsRaw { get; }
         public abstract PermissionGroup GetPermissionGroup(int index);
+        /// <summary>
+        /// <para>Game state safe.</para>
+        /// </summary>
         public abstract int PermissionGroupsCount { get; }
 
         /// <summary>

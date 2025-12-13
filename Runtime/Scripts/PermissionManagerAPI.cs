@@ -79,6 +79,22 @@ namespace JanSharp
         /// <returns><see langword="null"/> if the there is no group with the given
         /// <paramref name="groupName"/>.</returns>
         public abstract PermissionGroup GetPermissionGroup(string groupName);
+        public abstract PermissionGroup GetPermissionGroup(uint groupId);
+        public abstract bool TryGetPermissionGroup(uint groupId, out PermissionGroup group);
+        /// <summary>
+        /// <para>Usable during the import process.</para>
+        /// <para>Specifically starting from when the permission manager game state has been imported (use the
+        /// <see cref="LockstepGameStateDependencyAttribute"/> targeting the
+        /// <see cref="PermissionManagerAPI"/> class to ensure game states depending on this API import after
+        /// the player data game state.)</para>
+        /// <para>And the underlying dictionary gets cleared in the
+        /// <see cref="LockstepEventType.OnImportFinished"/> event with an <c>Order</c> of
+        /// <c>10000</c>.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        /// <param name="importedGroupId"></param>
+        /// <returns></returns>
+        public abstract PermissionGroup GetPermissionGroupFromImportedId(uint importedGroupId);
         public abstract bool PlayerHasPermission(CorePlayerData corePlayerData, PermissionDefinition permissionDef);
 
         public abstract void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate);

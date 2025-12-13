@@ -59,10 +59,23 @@ namespace JanSharp.Internal
                 return result;
             }
         }
-        public override PermissionGroup GetPermissionGroup(int index) => permissionGroups[index];
         public override int PermissionGroupsCount => permissionGroupsCount;
+        public override PermissionGroup GetPermissionGroup(int index) => permissionGroups[index];
+        public override PermissionGroup GetPermissionGroup(uint groupId) => (PermissionGroup)groupsById[groupId].Reference;
+        public override bool TryGetPermissionGroup(uint groupId, out PermissionGroup group)
+        {
+            if (groupsById.TryGetValue(groupId, out DataToken groupToken))
+            {
+                group = (PermissionGroup)groupToken.Reference;
+                return true;
+            }
+            group = null;
+            return false;
+        }
 
         private DataDictionary groupsByImportedId;
+        public override PermissionGroup GetPermissionGroupFromImportedId(uint importedGroupId)
+            => (PermissionGroup)groupsByImportedId[importedGroupId].Reference;
 
         private PermissionsPlayerData GetPlayerDataForPlayerId(uint playerId)
         {
@@ -715,7 +728,7 @@ namespace JanSharp.Internal
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
-        [LockstepEvent(LockstepEventType.OnImportFinished)]
+        [LockstepEvent(LockstepEventType.OnImportFinished, Order = 10000)]
         public void OnImportFinished()
         {
 #if PERMISSION_SYSTEM_DEBUG

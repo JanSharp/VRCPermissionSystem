@@ -79,6 +79,7 @@ namespace JanSharp
         /// <returns><see langword="null"/> if the there is no group with the given
         /// <paramref name="groupName"/>.</returns>
         public abstract PermissionGroup GetPermissionGroup(string groupName);
+        public abstract bool PlayerHasPermission(CorePlayerData corePlayerData, PermissionDefinition permissionDef);
 
         public abstract void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate);
         /// <summary>

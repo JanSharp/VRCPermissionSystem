@@ -20,6 +20,11 @@ namespace JanSharp
 
         [System.NonSerialized] public uint deserializedId;
 
+        public bool HasPermission(PermissionDefinition permissionDef)
+        {
+            return permissionGroup.permissionValues[permissionDef.index];
+        }
+
         public override void OnPlayerDataInit(bool isAboutToBeImported)
         {
 #if PERMISSION_SYSTEM_DEBUG

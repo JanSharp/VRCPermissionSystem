@@ -73,7 +73,7 @@ namespace JanSharp
                 if (field.FieldType != typeof(string))
                 {
                     Debug.LogError($"[PermissionSystem] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
-                        + $"however is {field.FieldType.Name}. It must be a string.");
+                        + $"however its type is {field.FieldType.Name}. It must be a string.");
                     isValid = false;
                 }
                 if (!EditorUtil.IsSerializedField(field))

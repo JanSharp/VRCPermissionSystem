@@ -44,16 +44,6 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         OnPermissionValueChanged,
-        /// <summary>
-        /// <para>Gets raised inside of <see cref="LockstepEventType.OnImportFinished"/> with an <c>Order</c>
-        /// of <c>0</c>, however only if the permission manger game state was part of the
-        /// <see cref="LockstepAPI.GameStatesBeingImported"/>.</para>
-        /// <para>Gets raised after the permission manager itself has finished its whole import process,
-        /// however <see cref="PermissionManagerAPI.GetPermissionGroupFromImportedId(uint)"/> is still
-        /// usable inside of this event.</para>
-        /// <para>Game state safe.</para>
-        /// </summary>
-        OnPermissionManagerImportFinished,
     }
 
     [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
@@ -118,7 +108,7 @@ namespace JanSharp
         /// <see cref="PermissionManagerAPI"/> class to ensure game states depending on this API import after
         /// the player data game state.)</para>
         /// <para>And the underlying dictionary gets cleared in the
-        /// <see cref="LockstepEventType.OnImportFinished"/> event with an <c>Order</c> of
+        /// <see cref="LockstepEventType.OnPostImportFinished"/> event with an <c>Order</c> of
         /// <c>10000</c>.</para>
         /// <para>Game state safe.</para>
         /// </summary>

@@ -364,7 +364,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  SendSetPlayerPermissionGroupIA");
 #endif
-            lockstep.WriteSmallUInt(corePlayerData.persistentId); // playerId would not work for offline players.
+            playerDataManager.WriteCorePlayerDataRef(corePlayerData);
             lockstep.WriteSmallUInt(group.id);
             lockstep.SendInputAction(setPlayerPermissionGroupIAId);
         }
@@ -376,8 +376,8 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnSetPlayerPermissionGroupIA");
 #endif
-            uint persistentId = lockstep.ReadSmallUInt();
-            if (!playerDataManager.TryGetCorePlayerDataForPersistentId(persistentId, out CorePlayerData corePlayerData))
+            CorePlayerData corePlayerData = playerDataManager.ReadCorePlayerDataRef();
+            if (corePlayerData == null)
                 return;
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))

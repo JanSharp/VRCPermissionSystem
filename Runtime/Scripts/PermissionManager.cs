@@ -135,6 +135,14 @@ namespace JanSharp.Internal
             Debug.Log($"[PermissionSystemDebug] Manager  OnPostPlayerDataManagerInit");
 #endif
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
+        }
+
+        [LockstepEvent(LockstepEventType.OnInitFinished)]
+        public void OnInitFinished()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnInitFinished");
+#endif
             SetGroupToViewWorldAs(defaultPermissionGroup);
         }
 

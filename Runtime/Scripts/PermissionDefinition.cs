@@ -28,6 +28,9 @@ namespace JanSharp
 
         private void CreateResolverIndexLut()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionDefinition {this.name}  CreateResolverIndexLut");
+#endif
             resolverIndexLut = new DataDictionary();
             for (int i = 0; i < resolversCount; i++)
                 resolverIndexLut.Add(resolvers[i], i);
@@ -35,12 +38,18 @@ namespace JanSharp
 
         public void PrePopulateResolverIndexLut()
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionDefinition {this.name}  PrePopulateResolverIndexLut");
+#endif
             if (resolverIndexLut == null)
                 CreateResolverIndexLut();
         }
 
         public void RegisterResolver(PermissionResolver resolver)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionDefinition {this.name}  RegisterResolver");
+#endif
             if (resolverIndexLut == null)
                 CreateResolverIndexLut();
             if (resolverIndexLut.ContainsKey(resolver))
@@ -51,6 +60,9 @@ namespace JanSharp
 
         public void DeregisterResolver(PermissionResolver resolver)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionDefinition {this.name}  DeregisterResolver");
+#endif
             if (resolverIndexLut == null)
                 CreateResolverIndexLut();
             if (!resolverIndexLut.Remove(resolver, out DataToken indexToken))

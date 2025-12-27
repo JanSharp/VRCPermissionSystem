@@ -24,7 +24,7 @@ namespace JanSharp
         public void Start()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission  Start");
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  Start");
 #endif
             InitializeInstantiated();
         }
@@ -32,7 +32,7 @@ namespace JanSharp
         public override void InitializeInstantiated()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission  InitializeInstantiated");
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated");
 #endif
             if (isInitialized)
                 return;
@@ -41,10 +41,16 @@ namespace JanSharp
                 permissionManager = SingletonsUtil.GetSingleton<PermissionManagerAPI>(nameof(PermissionManagerAPI));
             else if (permissionManager.ExistedAtSceneLoad(this)) // permissionManager is never null if this script existed at scene load.
             {
+#if PERMISSION_SYSTEM_DEBUG
+                Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: true, lockstep.IsInitialized: {permissionManager.lockstep.IsInitialized}");
+#endif
                 if (!permissionManager.lockstep.IsInitialized)
                     gameObject.SetActive(showWhileLoading);
                 return;
             }
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: false, lockstep.IsInitialized: {permissionManager.lockstep.IsInitialized}");
+#endif
 
             foreach (PermissionDefinition permissionDef in permissionDefs)
                 permissionDef.RegisterResolver(this);
@@ -58,7 +64,7 @@ namespace JanSharp
         public void OnDestroy()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission  OnDestroy");
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  OnDestroy");
 #endif
             // Null checking just to prevent errors when exiting play mode or leaving the world in VRChat.
             // Technically also to prevent errors when something put null into the array at runtime.
@@ -71,7 +77,7 @@ namespace JanSharp
         public override void Resolve()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission  Resolve");
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  Resolve");
 #endif
             bool conditionsMatching = PermissionsUtil.ResolveConditionsList(logicalAnds, permissionDefs);
             gameObject.SetActive((whenConditionsAreMet == WhenConditionsAreMetType.Show) == conditionsMatching);

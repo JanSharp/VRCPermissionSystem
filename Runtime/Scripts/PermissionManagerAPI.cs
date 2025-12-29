@@ -67,6 +67,16 @@ namespace JanSharp
     [SingletonScript("fe2230975d59bf380865519bc62b6a3a")] // Runtime/Prefabs/PermissionManager.prefab
     public abstract class PermissionManagerAPI : LockstepGameState
     {
+        /// <summary>
+        /// <para>Gets set to <see langword="true"/> right before the first calls to
+        /// <see cref="PermissionResolver.Resolve"/>, which happens inside of
+        /// <see cref="PlayerDataEventType.OnPostPlayerDataManagerInit"/> and
+        /// <see cref="LockstepGameState.DeserializeGameState(bool, uint, LockstepGameStateOptionsData)"/>.</para>
+        /// <para>The entirety of the API is usable once this is <see langword="true"/>.</para>
+        /// <para>Usable any time.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract bool IsInitialized { get; }
         public abstract PermissionGroup DefaultPermissionGroup { get; }
         /// <summary>
         /// <para>Game state safe, including order.</para>
@@ -106,7 +116,7 @@ namespace JanSharp
         /// <para>Specifically starting from when the permission manager game state has been imported (use the
         /// <see cref="LockstepGameStateDependencyAttribute"/> targeting the
         /// <see cref="PermissionManagerAPI"/> class to ensure game states depending on this API import after
-        /// the player data game state.)</para>
+        /// the permission manager game state.)</para>
         /// <para>And the underlying dictionary gets cleared in the
         /// <see cref="LockstepEventType.OnImportFinished"/> event with an <c>Order</c> of
         /// <c>10000</c>.</para>

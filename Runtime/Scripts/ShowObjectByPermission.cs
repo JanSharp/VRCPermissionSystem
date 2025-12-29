@@ -42,20 +42,20 @@ namespace JanSharp
             else if (permissionManager.ExistedAtSceneLoad(this)) // permissionManager is never null if this script existed at scene load.
             {
 #if PERMISSION_SYSTEM_DEBUG
-                Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: true, lockstep.IsInitialized: {permissionManager.lockstep.IsInitialized}");
+                Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: true, permissionManager.IsInitialized: {permissionManager.IsInitialized}");
 #endif
-                if (!permissionManager.lockstep.IsInitialized)
+                if (!permissionManager.IsInitialized)
                     gameObject.SetActive(showWhileLoading);
                 return;
             }
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: false, lockstep.IsInitialized: {permissionManager.lockstep.IsInitialized}");
+            Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: false, permissionManager.IsInitialized: {permissionManager.IsInitialized}");
 #endif
 
             foreach (PermissionDefinition permissionDef in permissionDefs)
                 permissionDef.RegisterResolver(this);
 
-            if (permissionManager.lockstep.IsInitialized)
+            if (permissionManager.IsInitialized)
                 Resolve();
             else
                 gameObject.SetActive(showWhileLoading);

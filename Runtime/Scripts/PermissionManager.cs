@@ -50,6 +50,9 @@ namespace JanSharp.Internal
         [HideInInspector][SerializeField] private PermissionResolver[] permissionResolversExistingAtSceneLoad;
         private DataDictionary permissionResolversExistingAtSceneLoadLut;
 
+        public bool isInitialized = false;
+        public override bool IsInitialized => isInitialized;
+
         public override PermissionGroup[] PermissionGroups
         {
             get
@@ -135,24 +138,8 @@ namespace JanSharp.Internal
             Debug.Log($"[PermissionSystemDebug] Manager  OnPostPlayerDataManagerInit");
 #endif
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
-        }
-
-        [LockstepEvent(LockstepEventType.OnInitFinished)]
-        public void OnInitFinished()
-        {
-#if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  OnInitFinished");
-#endif
+            isInitialized = true;
             SetGroupToViewWorldAs(defaultPermissionGroup);
-        }
-
-        [LockstepEvent(LockstepEventType.OnClientBeginCatchUp)]
-        public void OnClientBeginCatchUp()
-        {
-#if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  OnClientBeginCatchUp");
-#endif
-            FetchPlayerDataClassNameIndex();
         }
 
         private void FetchPlayerDataClassNameIndex()
@@ -771,12 +758,14 @@ namespace JanSharp.Internal
                 return null;
             }
 
+            FetchPlayerDataClassNameIndex();
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
 
             nextGroupId = lockstep.ReadSmallUInt();
             ReadPermissionGroups();
 
             ResolvePlayerPermissionData(groupsById);
+            isInitialized = true;
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
             return null;
         }
@@ -790,7 +779,6 @@ namespace JanSharp.Internal
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionGroupRenamedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPlayerPermissionGroupChangedListeners;
         [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionValueChangedListeners;
-        [HideInInspector][SerializeField] private UdonSharpBehaviour[] onPermissionManagerImportFinishedListeners;
 
         private PermissionGroup createdPermissionGroup;
         public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;

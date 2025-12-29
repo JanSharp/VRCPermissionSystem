@@ -737,11 +737,11 @@ namespace JanSharp.Internal
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
-        [LockstepEvent(LockstepEventType.OnPostImportFinished, Order = 10000)]
-        public void OnPostImportFinished()
+        [LockstepEvent(LockstepEventType.OnImportFinished, Order = 10000)]
+        public void OnImportFinished()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  OnPostImportFinished");
+            Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinished");
 #endif
             groupsByImportedId = null;
         }

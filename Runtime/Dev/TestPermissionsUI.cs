@@ -350,8 +350,8 @@ namespace JanSharp
             permissionToggles[index].SetValueWithoutNotify(editingPermissionGroup.permissionValues[index]);
         }
 
-        [LockstepEvent(LockstepEventType.OnImportFinished)]
-        public void OnImportFinished()
+        [LockstepEvent(LockstepEventType.OnImportFinishingUp)]
+        public void OnImportFinishingUp()
         {
             if (editingPermissionGroup == null || editingPermissionGroup.isDeleted)
                 editingPermissionGroup = permissionManager.DefaultPermissionGroup;

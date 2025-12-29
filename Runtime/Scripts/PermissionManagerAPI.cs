@@ -108,7 +108,7 @@ namespace JanSharp
         /// <see cref="PermissionManagerAPI"/> class to ensure game states depending on this API import after
         /// the player data game state.)</para>
         /// <para>And the underlying dictionary gets cleared in the
-        /// <see cref="LockstepEventType.OnPostImportFinished"/> event with an <c>Order</c> of
+        /// <see cref="LockstepEventType.OnImportFinished"/> event with an <c>Order</c> of
         /// <c>10000</c>.</para>
         /// <para>Game state safe.</para>
         /// </summary>

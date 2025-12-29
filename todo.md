@@ -10,3 +10,4 @@
 - [x] ~~Add CustomPermissionResolver~~ Derive from the PermissionResolver class
   - [x] ~~Support instantiation? Maybe that's up to the deriving class~~ Deal with it yourself, unfortunately
 - [ ] Add ShowIfAnyChildrenAreShown
+- [ ] Move logic back out of OnInitFinished and add its own isInitialized flag to the permission manager

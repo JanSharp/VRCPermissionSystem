@@ -101,7 +101,6 @@ namespace JanSharp.Internal
 #endif
             localPlayer = Networking.LocalPlayer;
             localPlayerId = (uint)localPlayer.playerId;
-            playerDataManager.RegisterCustomPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
             permissionDefsCount = permissionDefs.Length;
             for (int i = 0; i < permissionDefsCount; i++)
             {
@@ -112,14 +111,30 @@ namespace JanSharp.Internal
             SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
         }
 
+        [PlayerDataEvent(PlayerDataEventType.OnRegisterCustomPlayerData)]
+        public void OnRegisterCustomPlayerData()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnRegisterCustomPlayerData");
+#endif
+            playerDataManager.RegisterCustomPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
+        }
+
+        [PlayerDataEvent(PlayerDataEventType.OnAllCustomPlayerDataRegistered)]
+        public void OnAllCustomPlayerDataRegistered()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnAllCustomPlayerDataRegistered");
+#endif
+            playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
+        }
+
         [PlayerDataEvent(PlayerDataEventType.OnPrePlayerDataManagerInit)]
         public void OnPrePlayerDataManagerInit()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnPrePlayerDataManagerInit");
 #endif
-            FetchPlayerDataClassNameIndex();
-
             defaultPermissionGroup = wannaBeClasses.New<PermissionGroup>(nameof(PermissionGroup));
             defaultPermissionGroup.isDefault = true;
             defaultPermissionGroup.groupName = PermissionGroup.DefaultGroupName;
@@ -140,14 +155,6 @@ namespace JanSharp.Internal
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
             isInitialized = true;
             SetGroupToViewWorldAs(defaultPermissionGroup);
-        }
-
-        private void FetchPlayerDataClassNameIndex()
-        {
-#if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  FetchPlayerDataClassNameIndex");
-#endif
-            playerDataClassNameIndex = playerDataManager.GetPlayerDataClassNameIndex<PermissionsPlayerData>(nameof(PermissionsPlayerData));
         }
 
         private void SetGroupToViewWorldAs(PermissionGroup group)
@@ -758,7 +765,6 @@ namespace JanSharp.Internal
                 return null;
             }
 
-            FetchPlayerDataClassNameIndex();
             localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
 
             nextGroupId = lockstep.ReadSmallUInt();

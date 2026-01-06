@@ -88,6 +88,14 @@ namespace JanSharp.Internal
                 .customPlayerData[playerDataClassNameIndex];
         }
 
+        public override bool PlayerHasPermission(CorePlayerData corePlayerData, string permissionInternalName)
+        {
+            if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
+                return false;
+            return ((PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex])
+                .permissionGroup.permissionValues[((PermissionDefinition)defToken.Reference).index];
+        }
+
         public override bool PlayerHasPermission(CorePlayerData corePlayerData, PermissionDefinition permissionDef)
         {
             return ((PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex])

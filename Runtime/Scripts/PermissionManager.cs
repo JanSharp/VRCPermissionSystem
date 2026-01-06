@@ -414,12 +414,20 @@ namespace JanSharp.Internal
         public override void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value)
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  SendSetPermissionValueIA");
+            Debug.Log($"[PermissionSystemDebug] Manager  SendSetPermissionValueIA - permissionInternalName: {permissionInternalName}");
 #endif
             if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
                 return;
+            SendSetPermissionValueIA(group, (PermissionDefinition)defToken.Reference, value);
+        }
+
+        public override void SendSetPermissionValueIA(PermissionGroup group, PermissionDefinition permissionDef, bool value)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SendSetPermissionValueIA");
+#endif
             lockstep.WriteSmallUInt(group.id);
-            lockstep.WriteSmallUInt((uint)((PermissionDefinition)defToken.Reference).index);
+            lockstep.WriteSmallUInt((uint)permissionDef.index);
             lockstep.WriteFlags(value);
             lockstep.SendInputAction(setPermissionValueIAId);
         }
@@ -442,14 +450,14 @@ namespace JanSharp.Internal
         public override void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value)
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS");
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS - permissionInternalName: {permissionInternalName}");
 #endif
             if (!permissionDefsByInternalName.TryGetValue(permissionInternalName, out DataToken defToken))
                 return;
             SetPermissionValueInGS(group, (PermissionDefinition)defToken.Reference, value);
         }
 
-        private void SetPermissionValueInGS(PermissionGroup group, PermissionDefinition permissionDef, bool value)
+        public override void SetPermissionValueInGS(PermissionGroup group, PermissionDefinition permissionDef, bool value)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  SetPermissionValueInGS");

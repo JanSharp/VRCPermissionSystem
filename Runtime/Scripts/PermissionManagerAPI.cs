@@ -172,7 +172,9 @@ namespace JanSharp
         public abstract void SetPlayerPermissionGroupInGS(CorePlayerData corePlayerData, PermissionGroup group);
 
         public abstract void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value);
+        public abstract void SendSetPermissionValueIA(PermissionGroup group, PermissionDefinition permissionDef, bool value);
         public abstract void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value);
+        public abstract void SetPermissionValueInGS(PermissionGroup group, PermissionDefinition permissionDef, bool value);
 
         public abstract bool ExistedAtSceneLoad(PermissionResolver resolver);
         public abstract void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs);

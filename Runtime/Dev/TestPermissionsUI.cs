@@ -89,7 +89,7 @@ namespace JanSharp
             {
                 var def = permissionDefs[i];
                 var toggle = (ToggleFieldWidgetData)widgets.NewToggleField(def.displayName, false)
-                    .SetCustomData(nameof(affectedPermissionName), def.internalName)
+                    .SetCustomData(nameof(affectedPermission), def)
                     .SetListener(this, nameof(OnPermissionToggleValueChanged));
                 permissionToggles[i] = toggle;
                 content[i + 1] = toggle;
@@ -267,12 +267,12 @@ namespace JanSharp
             permissionManager.SendRenamePermissionGroupIA(editingPermissionGroup, groupNameField.Value);
         }
 
-        private string affectedPermissionName;
+        private PermissionDefinition affectedPermission;
         public void OnPermissionToggleValueChanged()
         {
             permissionManager.SendSetPermissionValueIA(
                 editingPermissionGroup,
-                affectedPermissionName,
+                affectedPermission,
                 permissionsEditor.GetSendingToggleField().Value);
         }
 

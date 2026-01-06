@@ -487,34 +487,34 @@ namespace JanSharp.Internal
             return permissionResolversExistingAtSceneLoadLut.ContainsKey(resolver);
         }
 
-        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
+        public override void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
         {
-            RegisterResolvers(resolver, permissionDefs, 0, permissionDefs.Length);
+            RegisterResolver(resolver, permissionDefs, 0, permissionDefs.Length);
         }
 
-        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
+        public override void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
         {
-            RegisterResolvers(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
+            RegisterResolver(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
         }
 
-        public override void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
+        public override void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
         {
             int stop = startIndex + count;
             for (int i = startIndex; i < stop; i++)
                 permissionDefs[i].RegisterResolver(resolver);
         }
 
-        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
+        public override void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs)
         {
-            DeregisterResolvers(resolver, permissionDefs, 0, permissionDefs.Length);
+            DeregisterResolver(resolver, permissionDefs, 0, permissionDefs.Length);
         }
 
-        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
+        public override void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex)
         {
-            DeregisterResolvers(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
+            DeregisterResolver(resolver, permissionDefs, startIndex, permissionDefs.Length - startIndex);
         }
 
-        public override void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
+        public override void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count)
         {
             int stop = startIndex + count;
             for (int i = startIndex; i < stop; i++)

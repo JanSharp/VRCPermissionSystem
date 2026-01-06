@@ -175,12 +175,12 @@ namespace JanSharp
         public abstract void SetPermissionValueInGS(PermissionGroup group, string permissionInternalName, bool value);
 
         public abstract bool ExistedAtSceneLoad(PermissionResolver resolver);
-        public abstract void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs);
-        public abstract void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex);
-        public abstract void RegisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count);
-        public abstract void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs);
-        public abstract void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex);
-        public abstract void DeregisterResolvers(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count);
+        public abstract void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs);
+        public abstract void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex);
+        public abstract void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count);
+        public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs);
+        public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex);
+        public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count);
 
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>.</para>

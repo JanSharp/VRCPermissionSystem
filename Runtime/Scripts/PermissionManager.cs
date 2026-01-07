@@ -102,6 +102,11 @@ namespace JanSharp.Internal
                 .permissionGroup.permissionValues[permissionDef.index];
         }
 
+        public override PermissionsPlayerData GetPermissionsPlayerData(CorePlayerData corePlayerData)
+        {
+            return (PermissionsPlayerData)corePlayerData.customPlayerData[playerDataClassNameIndex];
+        }
+
         private void Start()
         {
 #if PERMISSION_SYSTEM_DEBUG

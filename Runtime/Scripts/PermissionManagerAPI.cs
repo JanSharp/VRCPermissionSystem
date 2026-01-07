@@ -127,6 +127,7 @@ namespace JanSharp
         public abstract PermissionGroup GetPermissionGroupFromImportedId(uint importedGroupId);
         public abstract bool PlayerHasPermission(CorePlayerData corePlayerData, string permissionInternalName);
         public abstract bool PlayerHasPermission(CorePlayerData corePlayerData, PermissionDefinition permissionDef);
+        public abstract PermissionsPlayerData GetPermissionsPlayerData(CorePlayerData corePlayerData);
 
         public abstract void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate);
         /// <summary>

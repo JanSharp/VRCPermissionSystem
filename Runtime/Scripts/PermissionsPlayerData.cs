@@ -16,10 +16,6 @@ namespace JanSharp
 
         #region GameState
         [System.NonSerialized] public PermissionGroup permissionGroup;
-        /// <summary>
-        /// <para>When this is non <c>-1</c> the permissions system is holding a strong reference to this
-        /// wanna be class instance.</para>
-        /// </summary>
         [System.NonSerialized] public int indexInPlayersInGroup = -1;
         [System.NonSerialized] public int indexInOnlinePlayersInGroup = -1;
         #endregion

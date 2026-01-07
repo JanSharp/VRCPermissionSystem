@@ -455,12 +455,12 @@ namespace JanSharp.Internal
             if (group == null)
             {
                 playerData.indexInOnlinePlayersInGroup = -1;
-                SetIndexInPlayersInGroup(playerData, -1);
+                playerData.indexInPlayersInGroup = -1;
                 return;
             }
 
             ArrList.Add(ref group.playersInGroup, ref group.playersInGroupCount, playerData);
-            SetIndexInPlayersInGroup(playerData, group.playersInGroupCount - 1);
+            playerData.indexInPlayersInGroup = group.playersInGroupCount - 1;
             if (playerData.core.isOffline)
                 return;
             ArrList.Add(ref group.onlinePlayersInGroup, ref group.onlinePlayersInGroupCount, playerData);
@@ -481,24 +481,6 @@ namespace JanSharp.Internal
                 players[index] = otherPlayerData;
                 otherPlayerData.indexInOnlinePlayersInGroup = index;
             }
-        }
-
-        private void SetIndexInPlayersInGroup(PermissionsPlayerData playerData, int index)
-        {
-#if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  SetIndexInPlayersInGroup - index: {index}");
-#endif
-            if (playerData.indexInPlayersInGroup == -1)
-            {
-                if (index == -1)
-                    return;
-                playerData.IncrementRefsCount();
-                playerData.indexInPlayersInGroup = index;
-                return;
-            }
-            playerData.indexInPlayersInGroup = index;
-            if (index == -1)
-                playerData.DecrementRefsCount();
         }
 
         [PlayerDataEvent(PlayerDataEventType.OnPlayerDataWentOffline, Order = -10000)]

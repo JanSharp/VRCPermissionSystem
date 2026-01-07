@@ -298,10 +298,10 @@ namespace JanSharp.Internal
             if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo || groupToMovePlayersTo.isDeleted)
                 return;
             group.isDeleted = true;
-            PermissionsPlayerData[] allPlayerData = playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData));
-            foreach (PermissionsPlayerData playerData in allPlayerData)
-                if (playerData.permissionGroup == group)
-                    SetPlayerDataPermissionGroup(playerData, groupToMovePlayersTo, group);
+            PermissionsPlayerData[] players = group.playersInGroup;
+            int count = group.playersInGroupCount;
+            for (int i = count - 1; i >= 0; i--)
+                SetPlayerDataPermissionGroup(players[i], groupToMovePlayersTo, group);
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);
@@ -413,10 +413,115 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  SetPlayerDataPermissionGroup");
 #endif
-            playerData.permissionGroup = group;
+            PlayerDataPermissionGroupSetter(playerData, group);
             if (playerData.core.playerId == localPlayerId)
                 SetGroupToViewWorldAs(group);
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
+        }
+
+        /// <summary>
+        /// <para>Internal API.</para>
+        /// </summary>
+        /// <param name="playerData"></param>
+        /// <param name="group"></param>
+        public void PlayerDataPermissionGroupSetter(PermissionsPlayerData playerData, PermissionGroup group)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetPlayerPermissionGroup");
+#endif
+            PermissionGroup prevGroup = playerData.permissionGroup;
+            if (prevGroup == group)
+                return;
+            playerData.permissionGroup = group;
+
+            int indexInGroup = playerData.indexInPlayersInGroup;
+            if (indexInGroup != -1)
+            {
+                PermissionsPlayerData[] players = prevGroup.playersInGroup;
+                int count = prevGroup.playersInGroupCount - 1;
+                prevGroup.playersInGroupCount = count;
+                if (count != indexInGroup) // An if just for optimization.
+                {
+                    PermissionsPlayerData otherPlayerData = players[count];
+                    players[indexInGroup] = otherPlayerData;
+                    otherPlayerData.indexInPlayersInGroup = indexInGroup;
+                }
+
+                indexInGroup = playerData.indexInOnlinePlayersInGroup;
+                if (indexInGroup != -1)
+                    RemoveFromOnlinePlayersInGroup(prevGroup, indexInGroup);
+            }
+
+            if (group == null)
+            {
+                playerData.indexInOnlinePlayersInGroup = -1;
+                SetIndexInPlayersInGroup(playerData, -1);
+                return;
+            }
+
+            ArrList.Add(ref group.playersInGroup, ref group.playersInGroupCount, playerData);
+            SetIndexInPlayersInGroup(playerData, group.playersInGroupCount - 1);
+            if (playerData.core.isOffline)
+                return;
+            ArrList.Add(ref group.onlinePlayersInGroup, ref group.onlinePlayersInGroupCount, playerData);
+            playerData.indexInOnlinePlayersInGroup = group.onlinePlayersInGroupCount - 1;
+        }
+
+        private void RemoveFromOnlinePlayersInGroup(PermissionGroup group, int index)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RemoveFromOnlinePlayersInGroup - group.groupName: {group.groupName}, index: {index}");
+#endif
+            PermissionsPlayerData[] players = group.onlinePlayersInGroup;
+            int count = group.onlinePlayersInGroupCount - 1;
+            group.onlinePlayersInGroupCount = count;
+            if (count != index) // An if just for optimization.
+            {
+                PermissionsPlayerData otherPlayerData = players[count];
+                players[index] = otherPlayerData;
+                otherPlayerData.indexInOnlinePlayersInGroup = index;
+            }
+        }
+
+        private void SetIndexInPlayersInGroup(PermissionsPlayerData playerData, int index)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  SetIndexInPlayersInGroup - index: {index}");
+#endif
+            if (playerData.indexInPlayersInGroup == -1)
+            {
+                if (index == -1)
+                    return;
+                playerData.IncrementRefsCount();
+                playerData.indexInPlayersInGroup = index;
+                return;
+            }
+            playerData.indexInPlayersInGroup = index;
+            if (index == -1)
+                playerData.DecrementRefsCount();
+        }
+
+        [PlayerDataEvent(PlayerDataEventType.OnPlayerDataWentOffline, Order = -10000)]
+        public void OnPlayerDataWentOffline()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnPlayerDataWentOffline");
+#endif
+            PermissionsPlayerData playerData = (PermissionsPlayerData)playerDataManager.PlayerDataForEvent.customPlayerData[playerDataClassNameIndex];
+            RemoveFromOnlinePlayersInGroup(playerData.permissionGroup, playerData.indexInOnlinePlayersInGroup);
+            playerData.indexInOnlinePlayersInGroup = -1;
+        }
+
+        [PlayerDataEvent(PlayerDataEventType.OnPlayerDataWentOnline, Order = -10000)]
+        public void OnPlayerDataWentOnline()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnPlayerDataWentOnline");
+#endif
+            PermissionsPlayerData playerData = (PermissionsPlayerData)playerDataManager.PlayerDataForEvent.customPlayerData[playerDataClassNameIndex];
+            PermissionGroup group = playerData.permissionGroup;
+            ArrList.Add(ref group.onlinePlayersInGroup, ref group.onlinePlayersInGroupCount, playerData);
+            playerData.indexInOnlinePlayersInGroup = group.onlinePlayersInGroupCount - 1;
         }
 
         public override void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value)
@@ -609,6 +714,9 @@ namespace JanSharp.Internal
         /// <returns>A map from live permission definitions to their imported index equivalent.</returns>
         private int[] ImportPermissionDefinitionsMetadata(int importedDefsCount)
         {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionDefinitionsMetadata");
+#endif
             int[] correspondingImportedDefIndexMap = new int[permissionDefsCount];
             for (int i = 0; i < permissionDefsCount; i++)
                 correspondingImportedDefIndexMap[i] = -1;
@@ -714,7 +822,7 @@ namespace JanSharp.Internal
 #endif
                 if (playerData.deserializedId == 0u) // Did not get imported.
                     continue;
-                playerData.permissionGroup = (PermissionGroup)groupsById[playerData.deserializedId].Reference;
+                PlayerDataPermissionGroupSetter(playerData, (PermissionGroup)groupsById[playerData.deserializedId].Reference);
                 playerData.deserializedId = 0u;
             }
         }

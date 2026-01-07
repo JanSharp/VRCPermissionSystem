@@ -13,6 +13,17 @@ namespace JanSharp
         [System.NonSerialized] public string groupName;
         [System.NonSerialized] public bool[] permissionValues;
         [System.NonSerialized] public bool isDeleted;
+
+        /// <summary>
+        /// <para>Strong wanna be class references.</para>
+        /// </summary>
+        [System.NonSerialized] public PermissionsPlayerData[] playersInGroup = new PermissionsPlayerData[ArrList.MinCapacity];
+        [System.NonSerialized] public int playersInGroupCount = 0;
+        /// <summary>
+        /// <para>Strong wanna be class references.</para>
+        /// </summary>
+        [System.NonSerialized] public PermissionsPlayerData[] onlinePlayersInGroup = new PermissionsPlayerData[ArrList.MinCapacity];
+        [System.NonSerialized] public int onlinePlayersInGroupCount = 0;
         #endregion
     }
 }

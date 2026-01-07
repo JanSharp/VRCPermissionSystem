@@ -16,6 +16,12 @@ namespace JanSharp
 
         #region GameState
         [System.NonSerialized] public PermissionGroup permissionGroup;
+        /// <summary>
+        /// <para>When this is non <c>-1</c> the permissions system is holding a strong reference to this
+        /// wanna be class instance.</para>
+        /// </summary>
+        [System.NonSerialized] public int indexInPlayersInGroup = -1;
+        [System.NonSerialized] public int indexInOnlinePlayersInGroup = -1;
         #endregion
 
         [System.NonSerialized] public uint deserializedId;
@@ -32,9 +38,15 @@ namespace JanSharp
 #endif
             if (isAboutToBeImported)
                 return;
-            // Still null inside of OnInit, because PermissionManager OnInit runs after PlayerDataManager OnInit.
-            // PermissionManager OnInit resolves that errors state.
-            permissionGroup = permissionManager.DefaultPermissionGroup;
+            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, permissionManager.DefaultPermissionGroup);
+        }
+
+        public override void OnPlayerDataUninit(bool force)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  OnPlayerDataInit");
+#endif
+            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, null);
         }
 
         public override bool PersistPlayerDataWhileOffline()

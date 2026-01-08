@@ -1,4 +1,5 @@
-﻿using UdonSharp;
+﻿using System.Text.RegularExpressions;
+using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
@@ -49,6 +50,8 @@ namespace JanSharp.Internal
 
         [HideInInspector][SerializeField] private PermissionResolver[] permissionResolversExistingAtSceneLoad;
         private DataDictionary permissionResolversExistingAtSceneLoadLut;
+
+        private Regex groupNameRegex; // Cannot assign it here, Udon cannot do that. Have to do it in Start.
 
         public bool isInitialized = false;
         public override bool IsInitialized => isInitialized;
@@ -112,6 +115,7 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  Start");
 #endif
+            groupNameRegex = new Regex(@"^(.*?)(\s+\d+)?$", RegexOptions.Singleline | RegexOptions.Compiled);
             localPlayer = Networking.LocalPlayer;
             localPlayerId = (uint)localPlayer.playerId;
             permissionDefsCount = permissionDefs.Length;
@@ -206,6 +210,22 @@ namespace JanSharp.Internal
             return groupsByName.TryGetValue(groupName, out DataToken groupToken)
                 ? (PermissionGroup)groupToken.Reference
                 : null;
+        }
+
+        public override string GetFirstUnusedGroupName(string desiredName)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  GetFirstNonCollidingGroupName");
+#endif
+            if (!groupsByName.ContainsKey(desiredName))
+                return desiredName;
+            // Group 0 is the entire matching string. 1 is the first user defined regex group.
+            string prefix = groupNameRegex.Match(desiredName).Groups[1].Value + " ";
+            int postfix = 1;
+            desiredName = prefix + postfix;
+            while (groupsByName.ContainsKey(desiredName))
+                desiredName = prefix + ++postfix;
+            return desiredName;
         }
 
         public override void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate)

@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDKBase;
@@ -249,12 +248,8 @@ namespace JanSharp
 
         public void OnDuplicateGroupClick()
         {
-            // Group 0 is the entire matching string. 1 is the first user defined group.
-            string prefix = Regex.Match(editingPermissionGroup.groupName, @"^(.*?)(\s+\d+)?$").Groups[1].Value + " ";
-            int postfix = 1;
-            while (permissionManager.GetPermissionGroup(prefix + postfix) != null)
-                postfix++;
-            permissionManager.SendDuplicatePermissionGroupIA(prefix + postfix, editingPermissionGroup);
+            string groupName = permissionManager.GetFirstUnusedGroupName(editingPermissionGroup.groupName);
+            permissionManager.SendDuplicatePermissionGroupIA(groupName, editingPermissionGroup);
         }
 
         public void OnDeleteGroupClick()

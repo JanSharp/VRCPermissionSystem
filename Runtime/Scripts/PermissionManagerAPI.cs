@@ -129,6 +129,7 @@ namespace JanSharp
         public abstract bool PlayerHasPermission(CorePlayerData corePlayerData, PermissionDefinition permissionDef);
         public abstract PermissionsPlayerData GetPermissionsPlayerData(CorePlayerData corePlayerData);
 
+        public abstract string GetFirstUnusedGroupName(string desiredName);
         public abstract void SendDuplicatePermissionGroupIA(string groupName, PermissionGroup toDuplicate);
         /// <summary>
         /// <para>Raises <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>, so long as

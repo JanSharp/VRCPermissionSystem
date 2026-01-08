@@ -252,10 +252,10 @@ namespace JanSharp.Internal
             uint groupId = lockstep.ReadSmallUInt();
             if (!groupsById.TryGetValue(groupId, out DataToken groupToken))
                 return;
-            DuplicatePermissionGroupInGS(groupName, (PermissionGroup)groupToken.Reference);
+            DuplicatePermissionGroupInGS(groupName, (PermissionGroup)groupToken.Reference, playerDataManager.SendingPlayerData);
         }
 
-        public override PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate)
+        public override PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate, CorePlayerData playerInitiatingCreation)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  DuplicatePermissionGroupInGS");
@@ -271,7 +271,7 @@ namespace JanSharp.Internal
             toDuplicate.permissionValues.CopyTo(permissionValues, index: 0);
             RegisterCreatedPermissionGroup(group);
             if (!lockstep.IsDeserializingForImport)
-                RaiseOnPermissionGroupDuplicated(group, toDuplicate);
+                RaiseOnPermissionGroupDuplicated(group, toDuplicate, playerInitiatingCreation);
             return group;
         }
 
@@ -765,7 +765,7 @@ namespace JanSharp.Internal
                 uint importedId = lockstep.ReadSmallUInt();
                 PermissionGroup group = groupsByName.TryGetValue(groupName, out DataToken groupToken)
                     ? (PermissionGroup)groupToken.Reference
-                    : DuplicatePermissionGroupInGS(groupName, defaultPermissionGroup);
+                    : DuplicatePermissionGroupInGS(groupName, defaultPermissionGroup, playerInitiatingCreation: null);
                 importedGroups[i] = group;
                 groupsByImportedId.Add(importedId, group);
                 groupsToKeepLut.Add(group, true);
@@ -921,6 +921,8 @@ namespace JanSharp.Internal
         public override PermissionGroup CreatedPermissionGroup => createdPermissionGroup;
         private PermissionGroup createdPermissionGroupDuplicationSource;
         public override PermissionGroup CreatedPermissionGroupDuplicationSource => createdPermissionGroupDuplicationSource;
+        private CorePlayerData playerDataCreatingPermissionGroup;
+        public override CorePlayerData PlayerDataCreatingPermissionGroup => playerDataCreatingPermissionGroup;
 
         private PermissionGroup deletedPermissionGroup;
         public override PermissionGroup DeletedPermissionGroup => deletedPermissionGroup;
@@ -940,17 +942,19 @@ namespace JanSharp.Internal
         private PermissionDefinition changedPermission;
         public override PermissionDefinition ChangedPermission => changedPermission;
 
-        private void RaiseOnPermissionGroupDuplicated(PermissionGroup createdPermissionGroup, PermissionGroup createdPermissionGroupDuplicationSource)
+        private void RaiseOnPermissionGroupDuplicated(PermissionGroup createdPermissionGroup, PermissionGroup createdPermissionGroupDuplicationSource, CorePlayerData playerDataCreatingPermissionGroup)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  RaiseOnPermissionGroupDuplicated");
 #endif
             this.createdPermissionGroup = createdPermissionGroup;
             this.createdPermissionGroupDuplicationSource = createdPermissionGroupDuplicationSource;
+            this.playerDataCreatingPermissionGroup = playerDataCreatingPermissionGroup;
             // For some reason UdonSharp needs the 'JanSharp.' namespace name here to resolve the Raise function call.
             JanSharp.CustomRaisedEvents.Raise(ref onPermissionGroupDuplicatedListeners, nameof(PermissionsEventType.OnPermissionGroupDuplicated));
             this.createdPermissionGroup = null; // To prevent misuse of the API.
             this.createdPermissionGroupDuplicationSource = null; // To prevent misuse of the API.
+            this.playerDataCreatingPermissionGroup = null; // To prevent misuse of the API.
         }
 
         private void RaiseOnPermissionGroupDeleted(PermissionGroup deletedPermissionGroup)

@@ -294,12 +294,9 @@ namespace JanSharp
         {
             if (!isInitialized)
                 return;
-            // TODO: Knowing which player, if any, created a new group would be useful, so we can only
-            // switch to that group if it was the local player creating it.
-            // Cannot use lockstep.SendingPlayerID because it is not guaranteed that we are inside of an input
-            // action here, just that it is game state safe.
-            // In other words, the API would have to provide explicit support for knowing which player created
-            // the group.
+            CorePlayerData player = permissionManager.PlayerDataCreatingPermissionGroup;
+            if (player == null || !player.isLocal)
+                return;
             editingPermissionGroup = permissionManager.CreatedPermissionGroup;
             RedrawGroupsLists();
         }

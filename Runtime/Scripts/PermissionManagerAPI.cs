@@ -8,6 +8,9 @@ namespace JanSharp
         /// permission group.</para>
         /// <para>Use <see cref="PermissionManagerAPI.CreatedPermissionGroupDuplicationSource"/> to get the
         /// permission group which was duplicated to create the new group.</para>
+        /// <para>Use <see cref="PermissionManagerAPI.PlayerDataCreatingPermissionGroup"/> to get the player
+        /// who sent the input action to create the permission group, if any player was responsible at
+        /// all.</para>
         /// <para>Game state safe.</para>
         /// </summary>
         OnPermissionGroupDuplicated,
@@ -138,9 +141,11 @@ namespace JanSharp
         /// <param name="groupName">Leading and trailing spaces get trimmed. Must not be an empty
         /// string. When invalid, <see langword="null"/> is returned.</param>
         /// <param name="toDuplicate"></param>
+        /// <param name="playerInitiatingCreation">The player who is creating this permission group, if any
+        /// (can be <see langword="null"/>).</param>
         /// <returns><see langword="null"/> if the given <paramref name="groupName"/> is already in
         /// use.</returns>
-        public abstract PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate);
+        public abstract PermissionGroup DuplicatePermissionGroupInGS(string groupName, PermissionGroup toDuplicate, CorePlayerData playerInitiatingCreation);
 
         public abstract void SendDeletePermissionGroupIA(PermissionGroup group, PermissionGroup groupToMovePlayersTo);
         /// <summary>
@@ -197,6 +202,13 @@ namespace JanSharp
         /// <para>Game state safe.</para>
         /// </summary>
         public abstract PermissionGroup CreatedPermissionGroupDuplicationSource { get; }
+        /// <summary>
+        /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>.</para>
+        /// <para>Can be <see langword="null"/>, indicating no specific player caused the creation of this
+        /// group.</para>
+        /// <para>Game state safe.</para>
+        /// </summary>
+        public abstract CorePlayerData PlayerDataCreatingPermissionGroup { get; }
 
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDeleted"/>.</para>

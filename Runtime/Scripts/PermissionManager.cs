@@ -460,7 +460,7 @@ namespace JanSharp.Internal
             playerData.permissionGroup = group;
 
             int indexInGroup = playerData.indexInPlayersInGroup;
-            if (indexInGroup != -1)
+            if (indexInGroup != -1 && prevGroup != null && !prevGroup.isDeleted)
             {
                 PermissionsPlayerData[] players = prevGroup.playersInGroup;
                 int count = prevGroup.playersInGroupCount - 1;
@@ -828,7 +828,11 @@ namespace JanSharp.Internal
                 Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData (inner) - playerData.core.displayName: {playerData.core.displayName}, playerData.deserializedId: {playerData.deserializedId}");
 #endif
                 if (playerData.deserializedId == 0u) // Did not get imported.
+                {
+                    if (playerData.permissionGroup == null || playerData.permissionGroup.isDeleted)
+                        PlayerDataPermissionGroupSetter(playerData, defaultPermissionGroup);
                     continue;
+                }
                 PlayerDataPermissionGroupSetter(playerData, (PermissionGroup)groupsById[playerData.deserializedId].Reference);
                 playerData.deserializedId = 0u;
             }

@@ -294,10 +294,12 @@ namespace JanSharp
         {
             if (!isInitialized)
                 return;
-            CorePlayerData player = permissionManager.PlayerDataCreatingPermissionGroup;
-            if (player == null || !player.isLocal)
+            PermissionGroup createdGroup = permissionManager.CreatedPermissionGroup;
+            if (createdGroup.isDeleted)
                 return;
-            editingPermissionGroup = permissionManager.CreatedPermissionGroup;
+            CorePlayerData player = permissionManager.PlayerDataCreatingPermissionGroup;
+            if (player != null && player.isLocal)
+                editingPermissionGroup = createdGroup;
             RedrawGroupsLists();
         }
 

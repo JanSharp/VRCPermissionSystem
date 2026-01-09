@@ -5,7 +5,8 @@ namespace JanSharp
     {
         /// <summary>
         /// <para>Use <see cref="PermissionManagerAPI.CreatedPermissionGroup"/> to get the newly created
-        /// permission group.</para>
+        /// permission group. <see cref="PermissionGroup.isDeleted"/> may already be
+        /// <see langword="true"/>.</para>
         /// <para>Use <see cref="PermissionManagerAPI.CreatedPermissionGroupDuplicationSource"/> to get the
         /// permission group which was duplicated to create the new group.</para>
         /// <para>Use <see cref="PermissionManagerAPI.PlayerDataCreatingPermissionGroup"/> to get the player

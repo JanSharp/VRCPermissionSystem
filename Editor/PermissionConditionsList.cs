@@ -13,14 +13,20 @@ namespace JanSharp
         {
             this.name = name;
             entries.Clear();
-            if (logicalAnds == null || inverts == null || assetGuids == null) // Newly created object.
-                return;
-            for (int i = 0; i < assetGuids.Length; i++)
+            // These will be null for newly created components.
+            // Also being extra lenient here, accepting arrays of different sizes, as for all intents and
+            // purposes it is outside of our control what other scripts or unity may do with these arrays,
+            // especially if we think about prefab override reverting for example.
+            logicalAnds ??= new bool[0];
+            inverts ??= new bool[0];
+            assetGuids ??= new string[0];
+            int length = System.Math.Max(System.Math.Max(logicalAnds.Length, inverts.Length), assetGuids.Length);
+            for (int i = 0; i < length; i++)
                 entries.Add(new()
                 {
-                    logicalAnd = logicalAnds[i],
-                    invert = inverts[i],
-                    defAsset = PermissionSystemEditorUtil.TryGetDefAssetByGuid(assetGuids[i], out var defAsset)
+                    logicalAnd = i < logicalAnds.Length && logicalAnds[i],
+                    invert = i < inverts.Length && inverts[i],
+                    defAsset = i < assetGuids.Length && PermissionSystemEditorUtil.TryGetDefAssetByGuid(assetGuids[i], out var defAsset)
                         ? defAsset
                         : null,
                 });

@@ -9,16 +9,17 @@ namespace JanSharp
     {
         public List<PermissionConditionsDummyEntry> entries = new();
 
-        public void PopulateFromReal(string name, bool[] logicalAnds, string[] assetGuids)
+        public void PopulateFromReal(string name, bool[] logicalAnds, bool[] inverts, string[] assetGuids)
         {
             this.name = name;
             entries.Clear();
-            if (logicalAnds == null || assetGuids == null) // Newly created object.
+            if (logicalAnds == null || inverts == null || assetGuids == null) // Newly created object.
                 return;
             for (int i = 0; i < assetGuids.Length; i++)
                 entries.Add(new()
                 {
                     logicalAnd = logicalAnds[i],
+                    invert = inverts[i],
                     defAsset = PermissionSystemEditorUtil.TryGetDefAssetByGuid(assetGuids[i], out var defAsset)
                         ? defAsset
                         : null,
@@ -30,6 +31,7 @@ namespace JanSharp
     internal struct PermissionConditionsDummyEntry
     {
         public bool logicalAnd;
+        public bool invert;
         public PermissionDefinitionAsset defAsset;
     }
 
@@ -37,11 +39,13 @@ namespace JanSharp
     {
         private Object[] targets;
         private System.Func<Object, bool[]> getLogicalAnds;
+        private System.Func<Object, bool[]> getInverts;
         private System.Func<Object, string[]> getAssetGuids;
 
         private SerializedObject[] sos;
-        private SerializedProperty[] assetGuidsProps;
         private SerializedProperty[] logicalAndsProps;
+        private SerializedProperty[] invertsProps;
+        private SerializedProperty[] assetGuidsProps;
 
         private PermissionConditionsDummy[] dummies;
         private SerializedObject dummiesSo;
@@ -52,22 +56,27 @@ namespace JanSharp
             Object[] targets,
             GUIContent header,
             string logicalAndsFieldName,
+            string invertsFieldName,
             string assetGuidsFieldName,
             System.Func<Object, bool[]> getLogicalAnds,
+            System.Func<Object, bool[]> getInverts,
             System.Func<Object, string[]> getAssetGuids)
         {
             this.targets = targets;
             this.getLogicalAnds = getLogicalAnds;
+            this.getInverts = getInverts;
             this.getAssetGuids = getAssetGuids;
 
             sos = new SerializedObject[targets.Length];
             logicalAndsProps = new SerializedProperty[targets.Length];
+            invertsProps = new SerializedProperty[targets.Length];
             assetGuidsProps = new SerializedProperty[targets.Length];
             dummies = new PermissionConditionsDummy[targets.Length];
             for (int i = 0; i < targets.Length; i++)
             {
                 sos[i] = new SerializedObject(targets[i]);
                 logicalAndsProps[i] = sos[i].FindProperty(logicalAndsFieldName);
+                invertsProps[i] = sos[i].FindProperty(invertsFieldName);
                 assetGuidsProps[i] = sos[i].FindProperty(assetGuidsFieldName);
                 dummies[i] = ScriptableObject.CreateInstance<PermissionConditionsDummy>();
                 PopulateFromReal(dummies[i], targets[i]);
@@ -92,7 +101,7 @@ namespace JanSharp
 
         private void PopulateFromReal(PermissionConditionsDummy dummy, Object target)
         {
-            dummy.PopulateFromReal(target.name, getLogicalAnds(target), getAssetGuids(target));
+            dummy.PopulateFromReal(target.name, getLogicalAnds(target), getInverts(target), getAssetGuids(target));
         }
 
         public void OnDisable()
@@ -112,16 +121,45 @@ namespace JanSharp
                 buttonRect.width = operatorProp.hasMultipleDifferentValues ? 50f : 40f;
                 if (!operatorProp.hasMultipleDifferentValues && operatorProp.boolValue)
                     buttonRect.x += 10f;
-                if (GUI.Button(buttonRect, operatorProp.hasMultipleDifferentValues
-                    ? EditorUtil.mixedValueGUIContent
-                    : new GUIContent(operatorProp.boolValue ? "AND" : "OR")))
+                if (GUI.Button(
+                    buttonRect,
+                    operatorProp.hasMultipleDifferentValues
+                        ? EditorUtil.mixedValueGUIContent
+                        : new GUIContent(operatorProp.boolValue ? "AND" : "OR")))
                 {
                     operatorProp.boolValue = !operatorProp.boolValue;
                 }
             }
+
+            {
+                SerializedProperty invertProp = prop.FindPropertyRelative(nameof(PermissionConditionsDummyEntry.invert));
+                if (GUI.Button(
+                    new Rect(rect.x + 52f, rect.y + 1f, 40f, EditorGUIUtility.singleLineHeight),
+                    invertProp.hasMultipleDifferentValues
+                        ? EditorUtil.mixedValueGUIContent
+                        : new GUIContent(invertProp.boolValue ? "NOT" : "")))
+                {
+                    invertProp.boolValue = !invertProp.boolValue;
+                }
+
+                // Keeping this here just for reference,
+                // it does the same as above but with a blue highlight when the the NOT is enabled.
+
+                // bool prevInvert = !invertProp.hasMultipleDifferentValues && invertProp.boolValue;
+                // bool newInvert = GUI.Toggle(
+                //     new Rect(rect.x + 52f, rect.y + 1f, 40f, EditorGUIUtility.singleLineHeight),
+                //     prevInvert,
+                //     invertProp.hasMultipleDifferentValues
+                //         ? EditorUtil.mixedValueGUIContent
+                //         : new GUIContent(prevInvert ? "NOT" : ""),
+                //     EditorStyles.miniButton);
+                // if (prevInvert != newInvert)
+                //     invertProp.boolValue = newInvert;
+            }
+
             // Negative width is fine. Not the end of the world.
             EditorGUI.PropertyField(
-                new Rect(rect.x + 52f, rect.y + 1f, -52f + rect.width, EditorGUIUtility.singleLineHeight),
+                new Rect(rect.x + 94f, rect.y + 1f, -94f + rect.width, EditorGUIUtility.singleLineHeight),
                 prop.FindPropertyRelative(nameof(PermissionConditionsDummyEntry.defAsset)),
                 GUIContent.none);
         }
@@ -147,6 +185,10 @@ namespace JanSharp
                     logicalAndsProps[i],
                     dummies[i].entries,
                     (p, v) => p.boolValue = v.logicalAnd);
+                EditorUtil.SetArrayProperty(
+                    invertsProps[i],
+                    dummies[i].entries,
+                    (p, v) => p.boolValue = v.invert);
                 EditorUtil.SetArrayProperty(
                     assetGuidsProps[i],
                     dummies[i].entries,

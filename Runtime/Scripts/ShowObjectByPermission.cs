@@ -14,6 +14,7 @@ namespace JanSharp
         public bool showWhileLoading = false;
 
         public bool[] logicalAnds;
+        public bool[] inverts;
         [SerializeField] private string[] assetGuids;
 #if UNITY_EDITOR && !COMPILER_UDONSHARP
         public string[] AssetGuids => assetGuids;
@@ -79,7 +80,7 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  Resolve");
 #endif
-            bool conditionsMatching = PermissionsUtil.ResolveConditionsList(logicalAnds, permissionDefs);
+            bool conditionsMatching = PermissionsUtil.ResolveConditionsList(logicalAnds, inverts, permissionDefs);
             gameObject.SetActive((whenConditionsAreMet == WhenConditionsAreMetType.Show) == conditionsMatching);
         }
     }

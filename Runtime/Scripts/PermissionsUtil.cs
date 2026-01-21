@@ -8,7 +8,7 @@ namespace JanSharp
 
     public static class PermissionsUtil
     {
-        public static bool ResolveConditionsList(bool[] logicalAnds, PermissionDefinition[] permissionDefs)
+        public static bool ResolveConditionsList(bool[] logicalAnds, bool[] inverts, PermissionDefinition[] permissionDefs)
         {
             int length = permissionDefs.Length;
             bool conditionsMatching = true;
@@ -19,7 +19,7 @@ namespace JanSharp
                     continue;
                 if (!logicalAnd && conditionsMatching && i != 0)
                     break;
-                conditionsMatching = permissionDefs[i].valueForLocalPlayer;
+                conditionsMatching = permissionDefs[i].valueForLocalPlayer != inverts[i];
             }
             return conditionsMatching;
         }

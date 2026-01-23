@@ -5,7 +5,7 @@ namespace JanSharp
     public abstract class PermissionResolver : UdonSharpBehaviour
     {
         /// <summary>
-        /// <para>A place to run any logic that needs to run when an object is instantiated rathe than
+        /// <para>A place to run any logic that needs to run when an object is instantiated rather than
         /// existing at scene load already.</para>
         /// <para>Any system instantiating objects must call this function on every instantiated
         /// object.</para>

@@ -56,11 +56,7 @@ namespace JanSharp
         {
             List<PermissionResolver> list = dependantResolversByPermissionDef[permissionDef];
             int count = list.Count;
-            int capacity = ArrList.MinCapacity;
-            while (capacity < count)
-                capacity *= 2;
-            for (int i = count; i < capacity; i++)
-                list.Add(null);
+            PermissionManagerOnBuild.AddNullToMeetCapacity(list);
 
             SerializedObject so = new(permissionDef);
             EditorUtil.SetArrayProperty(

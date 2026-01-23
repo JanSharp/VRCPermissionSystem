@@ -40,7 +40,7 @@ namespace JanSharp
             isInitialized = true;
             if (permissionManager == null)
                 permissionManager = SingletonsUtil.GetSingleton<PermissionManagerAPI>(nameof(PermissionManagerAPI));
-            else if (permissionManager.ExistedAtSceneLoad(this)) // permissionManager is never null if this script existed at scene load.
+            else if (permissionManager.IsResolverExistenceRegistered(this)) // permissionManager is never null if this script existed at scene load.
             {
 #if PERMISSION_SYSTEM_DEBUG
                 Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  InitializeInstantiated (inner) - ExistedAtSceneLoad: true, permissionManager.IsInitialized: {permissionManager.IsInitialized}");

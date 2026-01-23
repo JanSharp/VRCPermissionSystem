@@ -45,11 +45,11 @@ namespace JanSharp.Internal
         private uint localPlayerId;
         private PermissionsPlayerData localPlayerData;
         private PermissionGroup viewWorldAsGroup;
-        /// <summary><see cref="PermissionResolver"/> resolver => <see langword="true"/></summary>
-        private DataDictionary visitedResolvers = new DataDictionary();
 
-        [HideInInspector][SerializeField] private PermissionResolver[] permissionResolversExistingAtSceneLoad;
-        private DataDictionary permissionResolversExistingAtSceneLoadLut;
+        [HideInInspector][SerializeField] private PermissionResolver[] allPermissionResolvers;
+        [HideInInspector][SerializeField] private int allPermissionResolversCount;
+        /// <summary><see cref="PermissionResolver"/> resolver => <see langword="int"/> index</summary>
+        private DataDictionary allPermissionResolversLut = new DataDictionary();
 
         private Regex groupNameRegex; // Cannot assign it here, Udon cannot do that. Have to do it in Start.
 
@@ -125,6 +125,8 @@ namespace JanSharp.Internal
                 permissionDef.index = i;
                 permissionDefsByInternalName.Add(permissionDef.internalName, permissionDef);
             }
+            if (allPermissionResolversLut == null)
+                PopulateAllPermissionResolversLut();
             SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
         }
 
@@ -185,21 +187,20 @@ namespace JanSharp.Internal
             bool[] permissionValues = group.permissionValues;
             for (int i = 0; i < permissionDefsCount; i++)
                 permissionDefs[i].valueForLocalPlayer = permissionValues[i];
-            // TODO: Just have a list of all resolvers on the manager itself, which removes the need of a dictionary here.
-            for (int i = 0; i < permissionDefsCount; i++)
+            for (int i = allPermissionResolversCount - 1; i >= 0; i--)
             {
-                PermissionResolver[] resolvers = permissionDefs[i].resolvers;
-                int resolversCount = permissionDefs[i].resolversCount;
-                for (int j = 0; j < resolversCount; j++)
+                PermissionResolver resolver = allPermissionResolvers[i];
+                if (resolver != null)
                 {
-                    PermissionResolver resolver = resolvers[j];
-                    if (resolver == null || visitedResolvers.TryGetValue(resolver, out DataToken discard)) // Cannot use _.
-                        continue;
-                    visitedResolvers.Add(resolver, true);
                     resolver.Resolve();
+                    continue;
                 }
+                if (i == allPermissionResolversCount - 1)
+                    continue;
+                PermissionResolver top = allPermissionResolvers[--allPermissionResolversCount];
+                allPermissionResolvers[i] = top;
+                allPermissionResolversLut[top] = i;
             }
-            visitedResolvers.Clear();
         }
 
         public override PermissionGroup GetPermissionGroup(string groupName)
@@ -603,16 +604,50 @@ namespace JanSharp.Internal
             RaiseOnPermissionValueChanged(group, permissionDefs[index]);
         }
 
-        public override bool ExistedAtSceneLoad(PermissionResolver resolver)
+        private void PopulateAllPermissionResolversLut()
         {
-            if (permissionResolversExistingAtSceneLoadLut == null)
+            allPermissionResolversLut = new DataDictionary();
+            for (int i = allPermissionResolversCount - 1; i >= 0; i--)
             {
-                permissionResolversExistingAtSceneLoadLut = new DataDictionary();
-                foreach (PermissionResolver resolverAtSceneLoad in permissionResolversExistingAtSceneLoad)
-                    if (resolverAtSceneLoad != null)
-                        permissionResolversExistingAtSceneLoadLut.Add(resolverAtSceneLoad, true);
+                PermissionResolver resolver = allPermissionResolvers[i];
+                if (resolver != null)
+                {
+                    allPermissionResolversLut.Add(resolver, i);
+                    continue;
+                }
+                if (i == allPermissionResolversCount - 1)
+                    continue;
+                PermissionResolver top = allPermissionResolvers[--allPermissionResolversCount];
+                allPermissionResolvers[i] = top;
+                allPermissionResolversLut[top] = i;
             }
-            return permissionResolversExistingAtSceneLoadLut.ContainsKey(resolver);
+        }
+
+        public override bool IsResolverExistenceRegistered(PermissionResolver resolver)
+        {
+            if (allPermissionResolversLut == null)
+                PopulateAllPermissionResolversLut();
+            return allPermissionResolversLut.ContainsKey(resolver);
+        }
+
+        public override void RegisterResolverExistence(PermissionResolver resolver)
+        {
+            if (allPermissionResolversLut == null)
+                PopulateAllPermissionResolversLut();
+            allPermissionResolversLut.Add(resolver, allPermissionResolversCount);
+            ArrList.Add(ref allPermissionResolvers, ref allPermissionResolversCount, resolver);
+        }
+
+        public override void DeregisterResolverExistence(PermissionResolver resolver)
+        {
+            if (!allPermissionResolversLut.Remove(resolver, out DataToken indexToken))
+                return;
+            int index = indexToken.Int;
+            if ((--allPermissionResolversCount) == index)
+                return;
+            PermissionResolver top = allPermissionResolvers[index];
+            allPermissionResolvers[index] = top;
+            allPermissionResolversLut[top] = index;
         }
 
         public override void RegisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs)

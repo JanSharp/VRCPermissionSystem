@@ -24,13 +24,28 @@ namespace JanSharp
 
         private static bool OnBuild(PermissionManager permissionManager)
         {
+            int count = resolvers.Count;
+            AddNullToMeetCapacity(resolvers);
+
             SerializedObject so = new SerializedObject(permissionManager);
             EditorUtil.SetArrayProperty(
-                so.FindProperty("permissionResolversExistingAtSceneLoad"),
+                so.FindProperty("allPermissionResolvers"),
                 resolvers,
                 (p, v) => p.objectReferenceValue = v);
+            so.FindProperty("allPermissionResolversCount").intValue = count;
             so.ApplyModifiedProperties();
             return true;
+        }
+
+        public static void AddNullToMeetCapacity<T>(List<T> list)
+            where T : class
+        {
+            int count = list.Count;
+            int capacity = ArrList.MinCapacity;
+            while (capacity < count)
+                capacity *= 2;
+            for (int i = count; i < capacity; i++)
+                list.Add(null);
         }
     }
 }

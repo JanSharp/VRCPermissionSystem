@@ -15,6 +15,8 @@ namespace JanSharp
         public bool Optional { get; set; } = false;
 
         /// <summary>
+        /// <para>This attribute must be applied to a <see cref="string"/> field which is serialized by unity
+        /// (so public or using <see cref="UnityEngine.SerializeField"/>).</para>
         /// <para>Use this to create a reference or dependency (depending on if <see cref="Optional"/> is set)
         /// on a <see cref="PermissionDefinitionAsset"/>. Yes asset, this is a custom property drawer
         /// resolving a guid which is saved in the field this attribute is applied to to an asset.</para>
@@ -25,8 +27,6 @@ namespace JanSharp
         /// world.</para>
         /// <para>Also at that time (build time) the associated <see cref="PermissionDefinition"/> field gets
         /// populated, making it available for use at runtime.</para>
-        /// <para>This attribute must be applied to a <see cref="string "/> field which is serialized by unity
-        /// (so public or using <see cref="UnityEngine.SerializeField"/>).</para>
         /// </summary>
         /// <param name="permissionDefinitionFieldName">The <c>nameof()</c> a
         /// <see cref="PermissionDefinition"/> field. Said field must also be serialized by unity. Likely best

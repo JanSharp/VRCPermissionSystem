@@ -78,7 +78,7 @@ namespace JanSharp
                 }
                 if (!EditorUtil.IsSerializedField(field))
                 {
-                    Debug.LogError($"[JanSharpCommon] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
+                    Debug.LogError($"[PermissionSystem] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
                         + $"however it is not a serialized field. It must either be public or have the {nameof(SerializeField)} attribute.");
                     isValid = false;
                 }
@@ -87,20 +87,20 @@ namespace JanSharp
                 FieldInfo defField = EditorUtil.GetFieldIncludingBase(ubType, defFieldName, PrivateAndPublicFlags);
                 if (defField == null)
                 {
-                    Debug.LogError($"[JanSharpCommon] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
+                    Debug.LogError($"[PermissionSystem] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
                         + $"pointing to a {nameof(PermissionDefinition)} field by the name '{defFieldName}' however no such field exists.");
                     isValid = false;
                 }
                 if (defField != null && defField.FieldType != typeof(PermissionDefinition))
                 {
-                    Debug.LogError($"[JanSharpCommon] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
+                    Debug.LogError($"[PermissionSystem] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
                         + $"pointing to the field by the name '{defFieldName}' which has the type {defField.FieldType.Name}, "
                         + $"however it must be a {nameof(PermissionDefinition)}.");
                     isValid = false;
                 }
                 if (defField != null && !EditorUtil.IsSerializedField(defField))
                 {
-                    Debug.LogError($"[JanSharpCommon] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
+                    Debug.LogError($"[PermissionSystem] The {ubType.Name}.{field.Name} field has the {nameof(PermissionDefinitionReferenceAttribute)} "
                         + $"pointing to the field by the name '{defFieldName}' which is not a serialized field. "
                         + $"It must either be public or have the {nameof(SerializeField)} attribute.");
                     isValid = false;
@@ -146,7 +146,7 @@ namespace JanSharp
 
                 if (!data.optional && permissionDef == null)
                 {
-                    Debug.LogError($"[JanSharpCommon] The {cached.ubType.Name}.{data.guidFieldName} field has "
+                    Debug.LogError($"[PermissionSystem] The {cached.ubType.Name}.{data.guidFieldName} field has "
                         + $"the {nameof(PermissionDefinitionReferenceAttribute)}, is non optional and is missing "
                         + $"a reference to any {nameof(PermissionDefinitionAsset)}.", ub);
                     result = false;

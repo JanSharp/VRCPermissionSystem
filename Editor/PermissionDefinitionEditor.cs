@@ -164,6 +164,12 @@ namespace JanSharp
             if (searchedForCommonDefParent)
                 return;
             searchedForCommonDefParent = true;
+            if (permissionDefsWithAsset.Count == 0)
+            {
+                commonDefParent = new GameObject("Permissions").transform;
+                Undo.RegisterCreatedObjectUndo(commonDefParent.gameObject, "Create Permissions Container");
+                return;
+            }
             commonDefParent = EditorUtil.FindCommonParent(permissionDefsWithAsset.Select(d => d.def.transform));
         }
 

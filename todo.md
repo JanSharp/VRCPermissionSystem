@@ -11,6 +11,6 @@
   - [x] ~~Support instantiation? Maybe that's up to the deriving class~~ Deal with it yourself, unfortunately
 - [ ] Add ShowIfAnyChildrenAreShown
 - [x] Move logic back out of OnInitFinished and add its own isInitialized flag to the permission manager
-- [ ] When there are no permission definitions in the scene yet and the editor script is creating one for the first time, make a new root object called "Permissions" and put the permission definition in there
+- [x] When there are no permission definitions in the scene yet and the editor script is creating one for the first time, make a new root object called "Permissions" and put the permission definition in there
 - [ ] probably add a game state safe resolve function specifically for imports
 - [x] add invert to each element in the conditions list

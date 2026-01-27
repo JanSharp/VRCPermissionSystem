@@ -14,3 +14,4 @@
 - [x] When there are no permission definitions in the scene yet and the editor script is creating one for the first time, make a new root object called "Permissions" and put the permission definition in there
 - [ ] probably add a game state safe resolve function specifically for imports
 - [x] add invert to each element in the conditions list
+- [ ] fix show object by permission not registering and deregistering itself when getting instantiated or destroyed

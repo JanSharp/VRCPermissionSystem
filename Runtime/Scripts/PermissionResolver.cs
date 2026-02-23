@@ -26,9 +26,11 @@ namespace JanSharp
         /// </summary>
         public abstract void InitializeInstantiated();
         /// <summary>
-        /// <para>Can run before <see cref="LockstepAPI.IsInitialized"/> or even
-        /// <see cref="LockstepAPI.LockstepIsInitialized"/> is <see langword="true"/>, for example inside of
-        /// the permission system's game state deserialization.</para>
+        /// <para>The permission system calls this the first time in <see cref="LockstepEventType.OnInit"/>
+        /// with an <c>Order</c> of <c>-9500</c> or <see cref="LockstepEventType.OnClientBeginCatchUp"/> with
+        /// an <c>Order</c> of <c>-9500</c>.</para>
+        /// <para>For imports the permission systems calls this in
+        /// <see cref="LockstepEventType.OnImportFinishingUp"/> with an <c>Order</c> of <c>10000</c>.</para>
         /// <para>Not game state safe.</para>
         /// </summary>
         public abstract void Resolve();

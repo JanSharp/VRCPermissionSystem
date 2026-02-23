@@ -8,7 +8,7 @@ namespace JanSharp.Internal
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     [SingletonDependency(typeof(SingletonManager))]
-    [LockstepGameStateDependency(typeof(PlayerDataManagerAPI))]
+    [LockstepGameStateDependency(typeof(PlayerDataManagerAPI), SelfLoadsBeforeDependency = true)]
     [CustomRaisedEventsDispatcher(typeof(PermissionsEventAttribute), typeof(PermissionsEventType))]
     public class PermissionManager : PermissionManagerAPI
     {
@@ -174,14 +174,24 @@ namespace JanSharp.Internal
             localPlayerData = (PermissionsPlayerData)playerDataManager.LocalPlayerData.customPlayerData[playerDataClassNameIndex];
         }
 
-        [PlayerDataEvent(PlayerDataEventType.OnPostPlayerDataManagerInit)]
-        public void OnPostPlayerDataManagerInit()
+        [LockstepEvent(LockstepEventType.OnInit, Order = -9500)] // After player data which is -10000
+        public void OnInit()
         {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  OnPostPlayerDataManagerInit");
+            Debug.Log($"[PermissionSystemDebug] Manager  OnInit");
 #endif
             isInitialized = true;
             SetGroupToViewWorldAs(defaultPermissionGroup);
+        }
+
+        [LockstepEvent(LockstepEventType.OnClientBeginCatchUp, Order = -9500)]
+        public void OnClientBeginCatchUp()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnClientBeginCatchUp");
+#endif
+            isInitialized = true;
+            SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
         private void SetGroupToViewWorldAs(PermissionGroup group)
@@ -451,6 +461,29 @@ namespace JanSharp.Internal
             if (playerData.core.playerId == localPlayerId)
                 SetGroupToViewWorldAs(group);
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
+        }
+
+        public override void WritePermissionGroupRef(PermissionGroup permissionGroup)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  WritePermissionGroupRef");
+#endif
+            lockstep.WriteSmallUInt(permissionGroup.id);
+        }
+
+        public override PermissionGroup ReadPermissionGroupRef()
+        {
+            return ReadPermissionGroupRef(lockstep.IsDeserializingForImport);
+        }
+
+        public override PermissionGroup ReadPermissionGroupRef(bool isImport)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  ReadPermissionGroupRef");
+#endif
+            return isImport ? GetPermissionGroupFromImportedId(lockstep.ReadSmallUInt())
+                : groupsById.TryGetValue(lockstep.ReadSmallUInt(), out DataToken groupToken) ? (PermissionGroup)groupToken.Reference
+                : null;
         }
 
         /// <summary>
@@ -860,27 +893,6 @@ namespace JanSharp.Internal
             }
         }
 
-        private void ResolvePlayerPermissionData(DataDictionary groupsById)
-        {
-#if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData");
-#endif
-            foreach (PermissionsPlayerData playerData in playerDataManager.GetAllPlayerData<PermissionsPlayerData>(nameof(PermissionsPlayerData)))
-            {
-#if PERMISSION_SYSTEM_DEBUG
-                Debug.Log($"[PermissionSystemDebug] Manager  ResolvePlayerPermissionData (inner) - playerData.core.displayName: {playerData.core.displayName}, playerData.deserializedId: {playerData.deserializedId}");
-#endif
-                if (playerData.deserializedId == 0u) // Did not get imported.
-                {
-                    if (playerData.permissionGroup == null || playerData.permissionGroup.isDeleted)
-                        PlayerDataPermissionGroupSetter(playerData, defaultPermissionGroup);
-                    continue;
-                }
-                PlayerDataPermissionGroupSetter(playerData, (PermissionGroup)groupsById[playerData.deserializedId].Reference);
-                playerData.deserializedId = 0u;
-            }
-        }
-
         private void Export()
         {
 #if PERMISSION_SYSTEM_DEBUG
@@ -903,9 +915,15 @@ namespace JanSharp.Internal
             int importedGroupsCount = (int)lockstep.ReadSmallUInt();
             ImportPermissionGroupNamesAndIds(importedGroupsCount);
             ImportPermissionGroupFlags(importedDefsCount, correspondingImportedDefIndexMap);
+        }
 
-            ResolvePlayerPermissionData(groupsByImportedId);
-            viewWorldAsGroup = null; // Force refresh even if the group is the same.
+        [LockstepEvent(LockstepEventType.OnImportFinishingUp, Order = 10000)]
+        public void OnImportFinishingUp()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinishingUp");
+#endif
+            viewWorldAsGroup = null; // Force refresh even if the group is the same, permission values could have changed.
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
@@ -942,13 +960,8 @@ namespace JanSharp.Internal
                 Import();
                 return null;
             }
-
             nextGroupId = lockstep.ReadSmallUInt();
             ReadPermissionGroups();
-
-            ResolvePlayerPermissionData(groupsById);
-            isInitialized = true;
-            SetGroupToViewWorldAs(localPlayerData.permissionGroup);
             return null;
         }
 

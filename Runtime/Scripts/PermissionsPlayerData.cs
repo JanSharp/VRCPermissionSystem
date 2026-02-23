@@ -20,8 +20,6 @@ namespace JanSharp
         [System.NonSerialized] public int indexInOnlinePlayersInGroup = -1;
         #endregion
 
-        [System.NonSerialized] public uint deserializedId;
-
         public bool HasPermission(PermissionDefinition permissionDef)
         {
             return permissionGroup.permissionValues[permissionDef.index];
@@ -58,7 +56,7 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Serialize");
 #endif
-            lockstep.WriteSmallUInt(permissionGroup.id);
+            permissionManager.WritePermissionGroupRef(permissionGroup);
         }
 
         public override void Deserialize(bool isImport, uint importedDataVersion)
@@ -66,11 +64,20 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Deserialize");
 #endif
-            // Resolved in the PermissionManager later.
-            deserializedId = lockstep.ReadSmallUInt();
+            PermissionGroup group = permissionManager.ReadPermissionGroupRef(isImport); // Impossible to be null.
+            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, group);
+        }
+
+        public override void OnNotPartOfImportedData()
+        {
 #if PERMISSION_SYSTEM_DEBUG
-            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Deserialize (inner) - core.displayName: {core.displayName}, deserializedId: {deserializedId}");
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  OnNotPartOfImportedData");
 #endif
+            if (permissionGroup != null && !permissionGroup.isDeleted)
+                return;
+            // If a player was not part of the imported data, the group the player was apart of could have
+            // been deleted through the import. Reset to the default group if that is the case.
+            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, permissionManager.DefaultPermissionGroup);
         }
     }
 }

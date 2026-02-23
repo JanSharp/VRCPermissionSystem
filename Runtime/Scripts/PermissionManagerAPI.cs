@@ -171,6 +171,20 @@ namespace JanSharp
         public abstract void SendRenamePermissionGroupIA(PermissionGroup group, string newGroupName);
         public abstract void RenamePermissionGroupInGS(PermissionGroup group, string newGroupName);
 
+        /// <summary>
+        /// </summary>
+        /// <param name="permissionGroup">Must not be <see langword="null"/>.</param>
+        public abstract void WritePermissionGroupRef(PermissionGroup permissionGroup);
+        /// <summary>
+        /// <para>Can return <see langword="null"/> when not reading for an import.</para>
+        /// <para>Exporting a valid imported if this is for an import. Never returns <see langword="null"/>
+        /// for imports.</para>
+        /// </summary>
+        /// <returns></returns>
+        public abstract PermissionGroup ReadPermissionGroupRef();
+        /// <inheritdoc cref="ReadPermissionGroupRef()"/>
+        public abstract PermissionGroup ReadPermissionGroupRef(bool isImport);
+
         public abstract void SendSetPlayerPermissionGroupIA(CorePlayerData corePlayerData, PermissionGroup group);
         /// <summary>
         /// <para>Raises <see cref="PermissionsEventType.OnPlayerPermissionGroupChanged"/>, so long as the

@@ -26,6 +26,9 @@ namespace JanSharp
         /// </summary>
         public abstract void InitializeInstantiated();
         /// <summary>
+        /// <para>Can run before <see cref="LockstepAPI.IsInitialized"/> or even
+        /// <see cref="LockstepAPI.LockstepIsInitialized"/> is <see langword="true"/>, for example inside of
+        /// the permission system's game state deserialization.</para>
         /// <para>Not game state safe.</para>
         /// </summary>
         public abstract void Resolve();

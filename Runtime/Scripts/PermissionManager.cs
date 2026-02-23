@@ -165,13 +165,21 @@ namespace JanSharp.Internal
             RegisterCreatedPermissionGroup(defaultPermissionGroup);
         }
 
+        [PlayerDataEvent(PlayerDataEventType.OnLocalPlayerDataAvailable)]
+        public void OnLocalPlayerDataAvailable()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnLocalPlayerDataAvailable");
+#endif
+            localPlayerData = (PermissionsPlayerData)playerDataManager.LocalPlayerData.customPlayerData[playerDataClassNameIndex];
+        }
+
         [PlayerDataEvent(PlayerDataEventType.OnPostPlayerDataManagerInit)]
         public void OnPostPlayerDataManagerInit()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnPostPlayerDataManagerInit");
 #endif
-            localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
             isInitialized = true;
             SetGroupToViewWorldAs(defaultPermissionGroup);
         }
@@ -934,8 +942,6 @@ namespace JanSharp.Internal
                 Import();
                 return null;
             }
-
-            localPlayerData = GetPlayerDataForPlayerId(localPlayerId);
 
             nextGroupId = lockstep.ReadSmallUInt();
             ReadPermissionGroups();

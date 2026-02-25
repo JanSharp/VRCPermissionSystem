@@ -15,3 +15,4 @@
 - [ ] probably add a game state safe resolve function specifically for imports
 - [x] add invert to each element in the conditions list
 - [ ] fix show object by permission not registering and deregistering itself when getting instantiated or destroyed
+- [x] import export options, 2 bools, permission groups and their values, player permission group associations

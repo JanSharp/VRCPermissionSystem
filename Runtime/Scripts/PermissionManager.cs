@@ -17,11 +17,18 @@ namespace JanSharp.Internal
         public override bool GameStateSupportsImportExport => true;
         public override uint GameStateDataVersion => 0u;
         public override uint GameStateLowestSupportedDataVersion => 0u;
-        public override LockstepGameStateOptionsUI ExportUI => null;
-        public override LockstepGameStateOptionsUI ImportUI => null;
+        [SerializeField] private PermissionImportExportOptionsUI exportUI;
+        [SerializeField] private PermissionImportExportOptionsUI importUI;
+        public override LockstepGameStateOptionsUI ExportUI => exportUI;
+        public override LockstepGameStateOptionsUI ImportUI => importUI;
 
         [HideInInspector][SerializeField][SingletonReference] private WannaBeClassesManager wannaBeClasses;
         [HideInInspector][SerializeField][SingletonReference] private PlayerDataManagerAPI playerDataManager;
+
+        public override PermissionImportExportOptions ExportOptions => (PermissionImportExportOptions)OptionsForCurrentExport;
+        public override PermissionImportExportOptions ImportOptions => (PermissionImportExportOptions)OptionsForCurrentImport;
+        private PermissionImportExportOptions optionsFromExport;
+        public override PermissionImportExportOptions OptionsFromExport => optionsFromExport;
 
         #region GameState
         private uint nextGroupId = 1u;
@@ -53,7 +60,7 @@ namespace JanSharp.Internal
 
         private Regex groupNameRegex; // Cannot assign it here, Udon cannot do that. Have to do it in Start.
 
-        public bool isInitialized = false;
+        private bool isInitialized = false;
         public override bool IsInitialized => isInitialized;
 
         public override PermissionGroup[] PermissionGroups
@@ -341,15 +348,31 @@ namespace JanSharp.Internal
 #endif
             if (group.isDefault || group.isDeleted || group == groupToMovePlayersTo || groupToMovePlayersTo.isDeleted)
                 return;
+            DeletePermissionGroupInGSInternal(group, groupToMovePlayersTo, suppressEventsAndLeaveWorldViewUnchanged: false);
+        }
+
+        private void DeletePermissionGroupInGSInternal(
+            PermissionGroup group,
+            PermissionGroup groupToMovePlayersTo,
+            bool suppressEventsAndLeaveWorldViewUnchanged)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  DeletePermissionGroupInGS");
+#endif
             group.isDeleted = true;
             PermissionsPlayerData[] players = group.playersInGroup;
             int count = group.playersInGroupCount;
-            for (int i = count - 1; i >= 0; i--)
-                SetPlayerDataPermissionGroup(players[i], groupToMovePlayersTo, group);
+            if (suppressEventsAndLeaveWorldViewUnchanged)
+                for (int i = count - 1; i >= 0; i--)
+                    PlayerDataPermissionGroupSetter(players[i], groupToMovePlayersTo);
+            else
+                for (int i = count - 1; i >= 0; i--)
+                    SetPlayerDataPermissionGroup(players[i], groupToMovePlayersTo, group);
             ArrList.Remove(ref permissionGroups, ref permissionGroupsCount, group);
             groupsById.Remove(group.id);
             groupsByName.Remove(group.groupName);
-            RaiseOnPermissionGroupDeleted(group);
+            if (!suppressEventsAndLeaveWorldViewUnchanged)
+                RaiseOnPermissionGroupDeleted(group);
             group.DecrementRefsCount();
         }
 
@@ -822,7 +845,27 @@ namespace JanSharp.Internal
             }
         }
 
-        private void ImportPermissionGroupNamesAndIds(int count)
+        private void OnlyBuildGroupsByImportedId(int count)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnlyBuildGroupsByImportedId");
+#endif
+            groupsByImportedId = new DataDictionary();
+            for (int i = 0; i < count; i++)
+            {
+                string groupName = lockstep.ReadString();
+                uint importedId = lockstep.ReadSmallUInt();
+                PermissionGroup group = groupsByName.TryGetValue(groupName, out DataToken groupToken)
+                    ? (PermissionGroup)groupToken.Reference
+                    : defaultPermissionGroup; // Players in groups not currently present in the world get set to the default group.
+                groupsByImportedId.Add(importedId, group);
+#if PERMISSION_SYSTEM_DEBUG
+                Debug.Log($"[PermissionSystemDebug] Manager  OnlyBuildGroupsByImportedId (inner) - importedId: {importedId}, group.id: {group.id}");
+#endif
+            }
+        }
+
+        private void ImportPermissionGroupNamesAndIds(int count, bool movePlayersOutOfDeletedGroups)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  ImportPermissionGroupNamesAndIds");
@@ -855,7 +898,10 @@ namespace JanSharp.Internal
             {
                 PermissionGroup group = permissionGroups[i];
                 if (!groupsToKeepLut.ContainsKey(group))
-                    DeletePermissionGroupWithoutCleanup(group);
+                    if (movePlayersOutOfDeletedGroups)
+                        DeletePermissionGroupInGSInternal(group, defaultPermissionGroup, suppressEventsAndLeaveWorldViewUnchanged: true);
+                    else
+                        DeletePermissionGroupWithoutCleanup(group);
             }
 
             permissionGroups = importedGroups; // To make the order match what was imported.
@@ -893,27 +939,46 @@ namespace JanSharp.Internal
             }
         }
 
-        private void Export()
+        private void Export(PermissionImportExportOptions exportOptions)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  Export");
 #endif
-            lockstep.WriteSmallUInt((uint)permissionDefsCount);
-            ExportPermissionDefinitionsMetadata();
+            lockstep.WriteCustomClass(exportOptions);
+
             lockstep.WriteSmallUInt((uint)permissionGroupsCount);
             ExportPermissionGroupNamesAndIds();
+
+            if (!exportOptions.includePermissionGroups)
+                return;
+            lockstep.WriteSmallUInt((uint)permissionDefsCount);
+            ExportPermissionDefinitionsMetadata();
             ExportPermissionGroupFlags();
         }
 
-        private void Import()
+        private void Import(PermissionImportExportOptions importOptions)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  Import");
 #endif
+            optionsFromExport = (PermissionImportExportOptions)lockstep.ReadCustomClass(nameof(PermissionImportExportOptions));
+            bool doImportPermissionGroups = optionsFromExport.includePermissionGroups && importOptions.includePermissionGroups;
+            bool doImportPlayerPermissionGroups = optionsFromExport.includePlayerPermissionGroups && importOptions.includePlayerPermissionGroups;
+            // Even if both permission groups and player permission groups do not get imported, still build
+            // the groupsByImportedId lut to provide the guarantee to all systems that reading permission
+            // group references in imports is always going to resolve properly.
+            // The permission system itself relies this guarantee in the player data import actually.
+
+            int importedGroupsCount = (int)lockstep.ReadSmallUInt();
+            if (doImportPermissionGroups)
+                ImportPermissionGroupNamesAndIds(importedGroupsCount, movePlayersOutOfDeletedGroups: !doImportPlayerPermissionGroups);
+            else
+                OnlyBuildGroupsByImportedId(importedGroupsCount);
+
+            if (!doImportPermissionGroups)
+                return;
             int importedDefsCount = (int)lockstep.ReadSmallUInt();
             int[] correspondingImportedDefIndexMap = ImportPermissionDefinitionsMetadata(importedDefsCount);
-            int importedGroupsCount = (int)lockstep.ReadSmallUInt();
-            ImportPermissionGroupNamesAndIds(importedGroupsCount);
             ImportPermissionGroupFlags(importedDefsCount, correspondingImportedDefIndexMap);
         }
 
@@ -923,7 +988,11 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinishingUp");
 #endif
-            viewWorldAsGroup = null; // Force refresh even if the group is the same, permission values could have changed.
+            if (!IsPartOfCurrentImport)
+                return;
+            if (optionsFromExport.includePermissionGroups && ImportOptions.includePermissionGroups)
+                viewWorldAsGroup = null; // Force refresh even if the group is the same, permission values could have changed.
+            // If the above did not happen and the group is the same this will do nothing, as it should.
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 
@@ -943,7 +1012,7 @@ namespace JanSharp.Internal
 #endif
             if (isExport)
             {
-                Export();
+                Export((PermissionImportExportOptions)exportOptions);
                 return;
             }
             lockstep.WriteSmallUInt(nextGroupId);
@@ -957,7 +1026,7 @@ namespace JanSharp.Internal
 #endif
             if (isImport)
             {
-                Import();
+                Import((PermissionImportExportOptions)importOptions);
                 return null;
             }
             nextGroupId = lockstep.ReadSmallUInt();

@@ -178,7 +178,8 @@ namespace JanSharp
         /// <summary>
         /// <para>Can return <see langword="null"/> when not reading for an import.</para>
         /// <para>Exporting a valid imported if this is for an import. Never returns <see langword="null"/>
-        /// for imports.</para>
+        /// for imports. Even when the permission system (seemingly) doesn't import anything due to
+        /// <see cref="OptionsFromExport"/> and or <see cref="ImportOptions"/>.</para>
         /// </summary>
         /// <returns></returns>
         public abstract PermissionGroup ReadPermissionGroupRef();
@@ -208,6 +209,19 @@ namespace JanSharp
         public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs);
         public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex);
         public abstract void DeregisterResolver(PermissionResolver resolver, PermissionDefinition[] permissionDefs, int startIndex, int count);
+
+        /// <summary>
+        /// <para>Used in exports.</para>
+        /// </summary>
+        public abstract PermissionImportExportOptions ExportOptions { get; }
+        /// <summary>
+        /// <para>Used in imports.</para>
+        /// </summary>
+        public abstract PermissionImportExportOptions ImportOptions { get; }
+        /// <summary>
+        /// <para>Used in imports.</para>
+        /// </summary>
+        public abstract PermissionImportExportOptions OptionsFromExport { get; }
 
         /// <summary>
         /// <para>Usable inside of <see cref="PermissionsEventType.OnPermissionGroupDuplicated"/>.</para>

@@ -30,8 +30,12 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  OnPlayerDataInit");
 #endif
-            if (isAboutToBeImported)
+            if (isAboutToBeImported
+                && permissionManager.OptionsFromExport.includePlayerPermissionGroups
+                && permissionManager.ImportOptions.includePlayerPermissionGroups)
+            {
                 return;
+            }
             ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, permissionManager.DefaultPermissionGroup);
         }
 
@@ -51,12 +55,35 @@ namespace JanSharp
             return !permissionGroup.isDefault;
         }
 
+        private void WritePermissionGroup()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  WritePermissionGroup");
+#endif
+            permissionManager.WritePermissionGroupRef(permissionGroup);
+        }
+
+        private void ReadPermissionGroup(bool isImport, bool discard)
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  WritePermissionGroup - discard: {discard}");
+#endif
+            if (discard)
+            {
+                permissionManager.ReadPermissionGroupRef(isImport);
+                return;
+            }
+            PermissionGroup group = permissionManager.ReadPermissionGroupRef(isImport); // Impossible to be null.
+            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, group);
+        }
+
         public override void Serialize(bool isExport)
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Serialize");
 #endif
-            permissionManager.WritePermissionGroupRef(permissionGroup);
+            if (!isExport || permissionManager.ExportOptions.includePlayerPermissionGroups)
+                WritePermissionGroup();
         }
 
         public override void Deserialize(bool isImport, uint importedDataVersion)
@@ -64,8 +91,10 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  Deserialize");
 #endif
-            PermissionGroup group = permissionManager.ReadPermissionGroupRef(isImport); // Impossible to be null.
-            ((Internal.PermissionManager)permissionManager).PlayerDataPermissionGroupSetter(this, group);
+            if (!isImport)
+                ReadPermissionGroup(isImport, discard: false);
+            else if (permissionManager.OptionsFromExport.includePlayerPermissionGroups)
+                ReadPermissionGroup(isImport, discard: !permissionManager.ImportOptions.includePlayerPermissionGroups);
         }
 
         public override void OnNotPartOfImportedData()

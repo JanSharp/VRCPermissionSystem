@@ -30,7 +30,8 @@ namespace JanSharp
         /// with an <c>Order</c> of <c>-9500</c> or <see cref="LockstepEventType.OnClientBeginCatchUp"/> with
         /// an <c>Order</c> of <c>-9500</c>.</para>
         /// <para>For imports the permission systems calls this in
-        /// <see cref="LockstepEventType.OnImportFinishingUp"/> with an <c>Order</c> of <c>10000</c>.</para>
+        /// <see cref="LockstepEventType.OnImportFinishingUp"/> with an <c>Order</c> of <c>10000</c>, however
+        /// it may also not call this at all for an import.</para>
         /// <para>Not game state safe.</para>
         /// </summary>
         public abstract void Resolve();

@@ -1002,6 +1002,10 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinished");
 #endif
+            if (!IsPartOfCurrentImport)
+                return;
+            optionsFromExport.DecrementRefsCount();
+            optionsFromExport = null;
             groupsByImportedId = null;
         }
 

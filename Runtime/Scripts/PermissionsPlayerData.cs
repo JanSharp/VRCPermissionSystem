@@ -55,6 +55,14 @@ namespace JanSharp
             return !permissionGroup.isDefault;
         }
 
+        public override bool PersistPlayerDataInExport()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  PersistPlayerDataInExport");
+#endif
+            return permissionManager.ExportOptions.includePlayerPermissionGroups && PersistPlayerDataWhileOffline();
+        }
+
         private void WritePermissionGroup()
         {
 #if PERMISSION_SYSTEM_DEBUG

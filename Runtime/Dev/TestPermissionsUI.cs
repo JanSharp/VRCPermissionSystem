@@ -87,7 +87,7 @@ namespace JanSharp
             for (int i = 0; i < defsCount; i++)
             {
                 var def = permissionDefs[i];
-                var toggle = (ToggleFieldWidgetData)widgets.NewToggleField(def.displayName, false)
+                var toggle = (ToggleFieldWidgetData)widgets.NewLeftToggleField(def.displayName, false)
                     .SetCustomData(nameof(affectedPermission), def)
                     .SetListener(this, nameof(OnPermissionToggleValueChanged));
                 permissionToggles[i] = toggle;

@@ -44,8 +44,8 @@ namespace JanSharp
         {
             if (includePermissionGroupsToggle != null)
                 return;
-            includePermissionGroupsToggle = widgetManager.NewToggleField("Permission Groups", false);
-            includePlayerPermissionGroupsToggle = widgetManager.NewToggleField("Permission Group", false);
+            includePermissionGroupsToggle = widgetManager.NewLeftToggleField("Permission Groups", false);
+            includePlayerPermissionGroupsToggle = widgetManager.NewLeftToggleField("Permission Group", false);
         }
 
         protected override void OnOptionsEditorShow(LockstepOptionsEditorUI ui, uint importedDataVersion)

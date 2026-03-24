@@ -217,7 +217,7 @@ namespace JanSharp.Internal
                 PermissionResolver resolver = allPermissionResolvers[i];
                 if (resolver != null)
                 {
-                    resolver.Resolve();
+                    resolver.ResolveAll();
                     continue;
                 }
                 if (i == allPermissionResolversCount - 1)
@@ -662,7 +662,7 @@ namespace JanSharp.Internal
                 {
                     PermissionResolver resolver = resolvers[i];
                     if (resolver != null)
-                        resolver.Resolve();
+                        resolver.Resolve(permissionDef);
                 }
             }
             RaiseOnPermissionValueChanged(group, permissionDefs[index]);

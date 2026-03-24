@@ -57,7 +57,7 @@ namespace JanSharp
                 permissionDef.RegisterResolver(this);
 
             if (permissionManager.IsInitialized)
-                Resolve();
+                ResolveAll();
             else
                 gameObject.SetActive(showWhileLoading);
         }
@@ -75,7 +75,7 @@ namespace JanSharp
                     permissionDef.DeregisterResolver(this);
         }
 
-        public override void Resolve()
+        public override void ResolveAll()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] ShowObjectByPermission {this.name}  Resolve");

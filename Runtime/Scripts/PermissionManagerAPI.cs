@@ -73,7 +73,7 @@ namespace JanSharp
     {
         /// <summary>
         /// <para>Gets set to <see langword="true"/> right before the first calls to
-        /// <see cref="PermissionResolver.Resolve"/>, which happens inside of
+        /// <see cref="PermissionResolver.ResolveAll"/>, which happens inside of
         /// <see cref="PlayerDataEventType.OnPostPlayerDataManagerInit"/> and
         /// <see cref="LockstepGameState.DeserializeGameState(bool, uint, LockstepGameStateOptionsData)"/>.</para>
         /// <para>The entirety of the API is usable once this is <see langword="true"/>.</para>

@@ -34,6 +34,14 @@ namespace JanSharp
         /// it may also not call this at all for an import.</para>
         /// <para>Not game state safe.</para>
         /// </summary>
-        public abstract void Resolve();
+        public abstract void ResolveAll();
+        /// <summary>
+        /// <para>Called specifically when the value of one <see cref="PermissionDefinition"/> changes for the
+        /// <see cref="PermissionGroup"/> the local player is apart of.</para>
+        /// <para>Not called during initialization, changing of permission groups nor imports.</para>
+        /// <para>Not game state safe.</para>
+        /// </summary>
+        /// <param name="permissionDef"></param>
+        public virtual void Resolve(PermissionDefinition permissionDef) => ResolveAll();
     }
 }

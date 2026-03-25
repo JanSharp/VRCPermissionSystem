@@ -988,11 +988,10 @@ namespace JanSharp.Internal
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinishingUp");
 #endif
-            if (!IsPartOfCurrentImport)
-                return;
-            if (optionsFromExport.includePermissionGroups && ImportOptions.includePermissionGroups)
-                viewWorldAsGroup = null; // Force refresh even if the group is the same, permission values could have changed.
-            // If the above did not happen and the group is the same this will do nothing, as it should.
+            // Force running all resolvers completely unconditionally, even if the permission system has not
+            // been imported since other systems could have imported data which must now change based on
+            // current permissions.
+            viewWorldAsGroup = null;
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 

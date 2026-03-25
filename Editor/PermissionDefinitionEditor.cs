@@ -60,10 +60,10 @@ namespace JanSharp
 
             SerializedObject so = new(permissionDef);
             EditorUtil.SetArrayProperty(
-                so.FindProperty("resolvers"),
-                dependantResolversByPermissionDef[permissionDef],
+                so.FindProperty(nameof(PermissionDefinition.resolvers)),
+                list,
                 (p, v) => p.objectReferenceValue = v);
-            so.FindProperty("resolversCount").intValue = count;
+            so.FindProperty(nameof(PermissionDefinition.resolversCount)).intValue = count;
             so.ApplyModifiedProperties();
             return true;
         }

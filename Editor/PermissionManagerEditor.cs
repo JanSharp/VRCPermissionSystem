@@ -8,12 +8,20 @@ namespace JanSharp
     [InitializeOnLoad]
     public static class PermissionManagerOnBuild
     {
+        private static List<PermissionResolverForGameState> gsResolvers;
         private static List<PermissionResolver> resolvers;
 
         static PermissionManagerOnBuild()
         {
+            OnBuildUtil.RegisterTypeCumulative<PermissionResolverForGameState>(OnGSResolversBuild, order: -1);
             OnBuildUtil.RegisterTypeCumulative<PermissionResolver>(OnResolversBuild, order: -1);
             OnBuildUtil.RegisterType<PermissionManager>(OnBuild, order: 0);
+        }
+
+        private static bool OnGSResolversBuild(IEnumerable<PermissionResolverForGameState> gsResolvers)
+        {
+            PermissionManagerOnBuild.gsResolvers = gsResolvers.ToList();
+            return true;
         }
 
         private static bool OnResolversBuild(IEnumerable<PermissionResolver> resolvers)
@@ -28,6 +36,10 @@ namespace JanSharp
             AddNullToMeetCapacity(resolvers);
 
             SerializedObject so = new SerializedObject(permissionManager);
+            EditorUtil.SetArrayProperty(
+                so.FindProperty("allGSPermissionResolvers"),
+                gsResolvers,
+                (p, v) => p.objectReferenceValue = v);
             EditorUtil.SetArrayProperty(
                 so.FindProperty("allPermissionResolvers"),
                 resolvers,

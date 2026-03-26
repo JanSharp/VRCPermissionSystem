@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using JanSharp.Internal;
 using UdonSharp;
 using UnityEditor;
 using UnityEngine;
@@ -26,7 +27,7 @@ namespace JanSharp
             public TypeCache(System.Type ubType)
             {
                 this.ubType = ubType;
-                isPermissionResolver = EditorUtil.DerivesFrom(ubType, typeof(PermissionResolver));
+                isPermissionResolver = EditorUtil.DerivesFrom(ubType, typeof(PermissionResolverBase));
             }
         }
 
@@ -140,7 +141,7 @@ namespace JanSharp
             {
                 string guid = so.FindProperty(data.guidFieldName).stringValue;
                 PermissionDefinition permissionDef = cached.isPermissionResolver
-                    ? PermissionDefinitionOnBuild.RegisterPermissionDefDependency((PermissionResolver)ub, guid)
+                    ? PermissionDefinitionOnBuild.RegisterPermissionDefDependency((PermissionResolverBase)ub, guid)
                     : PermissionDefinitionOnBuild.GetOrCreatePermissionDef(guid);
                 so.FindProperty(data.permissionDefFieldName).objectReferenceValue = permissionDef;
 

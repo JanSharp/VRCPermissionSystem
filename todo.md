@@ -12,7 +12,7 @@
 - [ ] Add ShowIfAnyChildrenAreShown
 - [x] Move logic back out of OnInitFinished and add its own isInitialized flag to the permission manager
 - [x] When there are no permission definitions in the scene yet and the editor script is creating one for the first time, make a new root object called "Permissions" and put the permission definition in there
-- [ ] probably add a game state safe resolve function specifically for imports
+- [x] probably add a game state safe resolve function specifically for imports - kind of, game state permission resolvers provide this functionality
 - [x] add invert to each element in the conditions list
 - [ ] fix show object by permission not registering and deregistering itself when getting instantiated or destroyed
 - [x] import export options, 2 bools, permission groups and their values, player permission group associations

@@ -45,6 +45,8 @@ namespace JanSharp.Internal
         /// <summary><see cref="string"/> internalName => <see cref="PermissionDefinition"/> def</summary>
         private DataDictionary permissionDefsByInternalName = new DataDictionary();
 
+        [HideInInspector][SerializeField] private PermissionResolverForGameState[] allGSPermissionResolvers;
+
         private int playerDataClassNameIndex;
         #endregion
 
@@ -62,6 +64,18 @@ namespace JanSharp.Internal
 
         private bool isInitialized = false;
         public override bool IsInitialized => isInitialized;
+
+        private const long MaxWorkMSPerFrame = 5L;
+        private System.Diagnostics.Stopwatch suspensionLogicSw = new System.Diagnostics.Stopwatch();
+        private int suspendedIndexInArray;
+
+        private bool LogicIsRunningLong()
+        {
+            bool result = suspensionLogicSw.ElapsedMilliseconds > MaxWorkMSPerFrame;
+            if (result)
+                lockstep.FlagToContinueNextFrame();
+            return result;
+        }
 
         public override PermissionGroup[] PermissionGroups
         {
@@ -481,6 +495,9 @@ namespace JanSharp.Internal
             Debug.Log($"[PermissionSystemDebug] Manager  SetPlayerDataPermissionGroup");
 #endif
             PlayerDataPermissionGroupSetter(playerData, group);
+            // Update game state resolvers first.
+            foreach (PermissionResolverForGameState resolver in allGSPermissionResolvers)
+                resolver.ResolveAll(playerData);
             if (playerData.core.playerId == localPlayerId)
                 SetGroupToViewWorldAs(group);
             RaiseOnPlayerPermissionGroupChanged(playerData, prevGroup);
@@ -596,6 +613,17 @@ namespace JanSharp.Internal
             playerData.indexInOnlinePlayersInGroup = group.onlinePlayersInGroupCount - 1;
         }
 
+        [PlayerDataEvent(PlayerDataEventType.OnPlayerDataCreated)]
+        public void OnPlayerDataCreated()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RemoveFromOnlinePlayersInGroup");
+#endif
+            PermissionsPlayerData player = GetPermissionsPlayerData(playerDataManager.PlayerDataForEvent);
+            foreach (PermissionResolverForGameState resolver in allGSPermissionResolvers)
+                resolver.ResolveAll(player);
+        }
+
         public override void SendSetPermissionValueIA(PermissionGroup group, string permissionInternalName, bool value)
         {
 #if PERMISSION_SYSTEM_DEBUG
@@ -653,6 +681,15 @@ namespace JanSharp.Internal
             if (prevValue == value)
                 return;
             permissionValues[index] = value;
+
+            // Run game state resolvers first.
+            foreach (PermissionResolverForGameState resolver in permissionDef.gsResolvers)
+            {
+                int count = group.playersInGroupCount;
+                for (int i = 0; i < count; i++)
+                    resolver.Resolve(group.playersInGroup[i], permissionDef);
+            }
+
             if (group == viewWorldAsGroup)
             {
                 permissionDef.valueForLocalPlayer = value;
@@ -665,6 +702,7 @@ namespace JanSharp.Internal
                         resolver.Resolve(permissionDef);
                 }
             }
+
             RaiseOnPermissionValueChanged(group, permissionDefs[index]);
         }
 
@@ -982,16 +1020,41 @@ namespace JanSharp.Internal
             ImportPermissionGroupFlags(importedDefsCount, correspondingImportedDefIndexMap);
         }
 
+        private void RunAllGSResolvers()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  RunAllGSResolvers");
+#endif
+            suspensionLogicSw.Restart();
+            CorePlayerData[] players = playerDataManager.AllCorePlayerDataRaw;
+            int playerCount = playerDataManager.AllCorePlayerDataCount;
+            while (suspendedIndexInArray < playerCount)
+            {
+                if (LogicIsRunningLong())
+                    return;
+                PermissionsPlayerData player = (PermissionsPlayerData)players[suspendedIndexInArray].customPlayerData[playerDataClassNameIndex];
+                foreach (PermissionResolverForGameState resolver in allGSPermissionResolvers)
+                    resolver.ResolveAll(player);
+                suspendedIndexInArray++;
+            }
+            suspendedIndexInArray = 0;
+        }
+
         [LockstepEvent(LockstepEventType.OnImportFinishingUp, Order = 10000)]
         public void OnImportFinishingUp()
         {
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] Manager  OnImportFinishingUp");
 #endif
-            // Force running all resolvers completely unconditionally, even if the permission system has not
-            // been imported since other systems could have imported data which must now change based on
-            // current permissions.
-            viewWorldAsGroup = null;
+            // Run all resolvers completely unconditionally, even if the permission system has not been
+            // imported since other systems could have imported data which must now change based on current
+            // permissions.
+
+            RunAllGSResolvers();
+            if (lockstep.FlaggedToContinueNextFrame)
+                return;
+
+            viewWorldAsGroup = null; // Unset to force running resolvers even if the group did not change.
             SetGroupToViewWorldAs(localPlayerData.permissionGroup);
         }
 

@@ -12,6 +12,7 @@ namespace JanSharp
     {
         private static Dictionary<PermissionDefinitionAsset, PermissionDefinition> defsInSceneByDefAsset = new();
         private static List<(PermissionDefinition def, PermissionDefinitionAsset asset)> permissionDefsWithAsset = new();
+        private static Dictionary<PermissionDefinition, List<PermissionResolverForGameState>> dependantGSResolversByPermissionDef = new();
         private static Dictionary<PermissionDefinition, List<PermissionResolver>> dependantResolversByPermissionDef = new();
         private static PermissionManager permissionManager;
         private static bool searchedForCommonDefParent = false;
@@ -31,6 +32,7 @@ namespace JanSharp
         {
             defsInSceneByDefAsset.Clear();
             permissionDefsWithAsset.Clear();
+            dependantGSResolversByPermissionDef.Clear();
             dependantResolversByPermissionDef.Clear();
             searchedForCommonDefParent = false;
             commonDefParent = null;
@@ -59,6 +61,10 @@ namespace JanSharp
             PermissionManagerOnBuild.AddNullToMeetCapacity(list);
 
             SerializedObject so = new(permissionDef);
+            EditorUtil.SetArrayProperty(
+                so.FindProperty(nameof(PermissionDefinition.gsResolvers)),
+                dependantGSResolversByPermissionDef[permissionDef],
+                (p, v) => p.objectReferenceValue = v);
             EditorUtil.SetArrayProperty(
                 so.FindProperty(nameof(PermissionDefinition.resolvers)),
                 list,
@@ -104,6 +110,7 @@ namespace JanSharp
             if (!Validate(permissionDef, out PermissionDefinitionAsset permissionDefAsset))
                 return false;
             permissionDefsWithAsset.Add((permissionDef, permissionDefAsset));
+            dependantGSResolversByPermissionDef.Add(permissionDef, new List<PermissionResolverForGameState>());
             dependantResolversByPermissionDef.Add(permissionDef, new List<PermissionResolver>());
 
             SerializedObject so = new SerializedObject(permissionDef);
@@ -173,7 +180,8 @@ namespace JanSharp
             commonDefParent = EditorUtil.FindCommonParent(permissionDefsWithAsset.Select(d => d.def.transform));
         }
 
-        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, string defAssetGuid)
+        public static PermissionDefinition RegisterPermissionDefDependency<T>(T dependant, string defAssetGuid)
+            where T : PermissionResolverBase
         {
             if (string.IsNullOrEmpty(defAssetGuid))
                 return null;
@@ -182,10 +190,21 @@ namespace JanSharp
             return null;
         }
 
-        public static PermissionDefinition RegisterPermissionDefDependency(PermissionResolver dependant, PermissionDefinitionAsset defAsset)
+        public static PermissionDefinition RegisterPermissionDefDependency<T>(T dependant, PermissionDefinitionAsset defAsset)
+            where T : PermissionResolverBase
         {
             PermissionDefinition permissionDef = GetOrCreatePermissionDef(defAsset);
-            AddDependant(permissionDef, dependant);
+            switch (dependant)
+            {
+                case PermissionResolverForGameState gsResolver:
+                    AddDependant(permissionDef, dependantGSResolversByPermissionDef, gsResolver);
+                    break;
+                case PermissionResolver resolver:
+                    AddDependant(permissionDef, dependantResolversByPermissionDef, resolver);
+                    break;
+                default:
+                    throw new System.Exception($"Invalid and unknown permission resolver type {(dependant?.GetType() ?? typeof(T)).Name}.");
+            }
             return permissionDef;
         }
 
@@ -214,14 +233,18 @@ namespace JanSharp
             // These next 2 lines are pretty pointless because the OnBuildUtil will rerun before this data gets used.
             // But for the sake of keeping the data structures useful in case anything else would like to use it
             // at some point, I am keeping this here anyway.
+            dependantGSResolversByPermissionDef.Add(permissionDef, new List<PermissionResolverForGameState>());
             dependantResolversByPermissionDef.Add(permissionDef, new List<PermissionResolver>());
             markForRerunDueToScriptInstantiationInPostBuild = true;
             return permissionDef;
         }
 
-        private static void AddDependant(PermissionDefinition permissionDef, PermissionResolver dependant)
+        private static void AddDependant<T>(
+            PermissionDefinition permissionDef,
+            Dictionary<PermissionDefinition, List<T>> dependantByPermissionDef,
+            T dependant)
         {
-            var resolvers = dependantResolversByPermissionDef[permissionDef];
+            var resolvers = dependantByPermissionDef[permissionDef];
             if (resolvers.Contains(dependant))
                 return;
             resolvers.Add(dependant);

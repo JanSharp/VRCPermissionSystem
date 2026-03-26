@@ -20,6 +20,8 @@ namespace JanSharp
         public string displayName;
         public bool defaultValue;
 
+        public PermissionResolverForGameState[] gsResolvers;
+
         public PermissionResolver[] resolvers;
         public int resolversCount;
         private DataDictionary resolverIndexLut;

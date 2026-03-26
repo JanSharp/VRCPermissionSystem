@@ -1,8 +1,6 @@
-using UdonSharp;
-
 namespace JanSharp
 {
-    public abstract class PermissionResolver : UdonSharpBehaviour
+    public abstract class PermissionResolver : Internal.PermissionResolverBase
     {
         /// <summary>
         /// <para>A place to run any logic that needs to run when an object is instantiated rather than

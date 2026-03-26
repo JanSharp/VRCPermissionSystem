@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using JanSharp.Internal;
 using UdonSharp;
 using UnityEditor;
 using UnityEngine;
@@ -76,11 +77,12 @@ namespace JanSharp
             }
         }
 
-        public static bool OnPermissionConditionsListBuild(
-            PermissionResolver resolverWithConditionsList,
+        public static bool OnPermissionConditionsListBuild<T>(
+            T resolverWithConditionsList,
             string[] assetGuids,
             string permissionDefsFieldName,
             string conditionsHeaderName)
+            where T : PermissionResolverBase
         {
             bool result = true;
             PermissionDefinition[] permissionDefs = new PermissionDefinition[assetGuids.Length];

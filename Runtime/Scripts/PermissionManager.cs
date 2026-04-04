@@ -65,13 +65,13 @@ namespace JanSharp.Internal
         private bool isInitialized = false;
         public override bool IsInitialized => isInitialized;
 
-        private const long MaxWorkMSPerFrame = 5L;
+        private double maxWorkMSPerFrame;
         private System.Diagnostics.Stopwatch suspensionLogicSw = new System.Diagnostics.Stopwatch();
         private int suspendedIndexInArray;
 
         private bool LogicIsRunningLong()
         {
-            bool result = suspensionLogicSw.ElapsedMilliseconds > MaxWorkMSPerFrame;
+            bool result = suspensionLogicSw.Elapsed.TotalMilliseconds > maxWorkMSPerFrame;
             if (result)
                 lockstep.FlagToContinueNextFrame();
             return result;
@@ -139,6 +139,7 @@ namespace JanSharp.Internal
             groupNameRegex = new Regex(@"^(.*?)(\s+\d+)?$", RegexOptions.Singleline | RegexOptions.Compiled);
             localPlayer = Networking.LocalPlayer;
             localPlayerId = (uint)localPlayer.playerId;
+            maxWorkMSPerFrame = lockstep.MaxWorkMSPerFrame;
             permissionDefsCount = permissionDefs.Length;
             for (int i = 0; i < permissionDefsCount; i++)
             {
@@ -149,6 +150,15 @@ namespace JanSharp.Internal
             if (allPermissionResolversLut == null)
                 PopulateAllPermissionResolversLut();
             SendCustomEventDelayedFrames(nameof(PrePopulatePermissionDefResolverIndexLutLoop), 1);
+        }
+
+        [LockstepEvent(LockstepEventType.OnMaxWorkMSPerFrameChanged)]
+        public void OnMaxWorkMSPerFrameChanged()
+        {
+#if PERMISSION_SYSTEM_DEBUG
+            Debug.Log($"[PermissionSystemDebug] Manager  OnMaxWorkMSPerFrameChanged");
+#endif
+            maxWorkMSPerFrame = lockstep.MaxWorkMSPerFrame;
         }
 
         [PlayerDataEvent(PlayerDataEventType.OnRegisterCustomPlayerData)]

@@ -349,7 +349,7 @@ namespace JanSharp
         {
             if (editingPermissionGroup == null || editingPermissionGroup.isDeleted)
                 editingPermissionGroup = permissionManager.DefaultPermissionGroup;
-            if (editingPlayerData == null || !editingPlayerData.CheckLiveliness())
+            if (!editingPlayerData.CheckLiveliness())
                 editingPlayerData = playerDataManager.GetPlayerDataForPlayerId<PermissionsPlayerData>(
                     nameof(PermissionsPlayerData),
                     (uint)Networking.LocalPlayer.playerId);

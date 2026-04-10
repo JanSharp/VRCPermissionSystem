@@ -236,7 +236,7 @@ namespace JanSharp
             Debug.Log($"[PermissionSystemDebug] TestPermissionsUI  UpdateSelectedPlayerGroup - selectedPlayerGroupInUI != null: {selectedPlayerGroupInUI != null}, editingPlayerData.permissionGroup.groupName: {editingPlayerData.permissionGroup.groupName}, playerGroupButtonsByGroup: {playerGroupButtonsByGroup.Count}");
 #endif
             ButtonWidgetData button;
-            if (selectedPlayerGroupInUI != null && !selectedPlayerGroupInUI.isDeleted)
+            if (!selectedPlayerGroupInUI.CheckIsDeleted())
             {
                 button = (ButtonWidgetData)playerGroupButtonsByGroup[selectedPlayerGroupInUI].Reference;
                 button.Label = selectedPlayerGroupInUI.groupName;
@@ -295,7 +295,7 @@ namespace JanSharp
             if (!isInitialized)
                 return;
             PermissionGroup createdGroup = permissionManager.CreatedPermissionGroup;
-            if (createdGroup.isDeleted)
+            if (createdGroup.CheckIsDeleted())
                 return;
             CorePlayerData player = permissionManager.PlayerDataCreatingPermissionGroup;
             if (player != null && player.isLocal)
@@ -347,7 +347,7 @@ namespace JanSharp
         [LockstepEvent(LockstepEventType.OnImportFinishingUp)]
         public void OnImportFinishingUp()
         {
-            if (editingPermissionGroup == null || editingPermissionGroup.isDeleted)
+            if (editingPermissionGroup.CheckIsDeleted())
                 editingPermissionGroup = permissionManager.DefaultPermissionGroup;
             if (!editingPlayerData.CheckLiveliness())
                 editingPlayerData = playerDataManager.GetPlayerDataForPlayerId<PermissionsPlayerData>(

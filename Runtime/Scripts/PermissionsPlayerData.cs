@@ -110,7 +110,7 @@ namespace JanSharp
 #if PERMISSION_SYSTEM_DEBUG
             Debug.Log($"[PermissionSystemDebug] PermissionsPlayerData  OnNotPartOfImportedData");
 #endif
-            if (permissionGroup != null && !permissionGroup.isDeleted)
+            if (!permissionGroup.CheckIsDeleted())
                 return;
             // If a player was not part of the imported data, the group the player was apart of could have
             // been deleted through the import. Reset to the default group if that is the case.

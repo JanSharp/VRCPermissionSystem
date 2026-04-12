@@ -4,7 +4,7 @@ using UnityEngine;
 namespace JanSharp
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-    public class PermissionsPlayerData : PlayerData
+    public class PermissionsPlayerData : CustomPlayerData
     {
         public override string PlayerDataInternalName => "jansharp.permissions";
         public override string PlayerDataDisplayName => "Permissions";

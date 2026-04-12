@@ -75,7 +75,8 @@ namespace JanSharp
                 return;
             PermissionResolver topResolver = resolvers[resolversCount];
             resolvers[index] = topResolver;
-            resolverIndexLut[topResolver] = index;
+            if (topResolver != null) // Specifically just to not throw exceptions when a world gets closed.
+                resolverIndexLut[topResolver] = index;
         }
     }
 }

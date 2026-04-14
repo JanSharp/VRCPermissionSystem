@@ -30,6 +30,21 @@ namespace JanSharp
         [System.NonSerialized] public PermissionsPlayerData[] onlinePlayersInGroup = new PermissionsPlayerData[ArrList.MinCapacity];
         [System.NonSerialized] public int onlinePlayersInGroupCount = 0;
         #endregion
+
+        public override bool WannaBeClassSupportsPooling => true;
+        public override void ResetWannaBeClassToDefault()
+        {
+            isDefault = default;
+            id = default;
+            groupName = default;
+            permissionValues = default;
+            isDeleted = default;
+
+            playersInGroup = new PermissionsPlayerData[ArrList.MinCapacity];
+            playersInGroupCount = 0;
+            onlinePlayersInGroup = new PermissionsPlayerData[ArrList.MinCapacity];
+            onlinePlayersInGroupCount = 0;
+        }
     }
 
     public static class PermissionGroupExtensions

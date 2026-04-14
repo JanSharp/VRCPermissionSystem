@@ -20,6 +20,15 @@ namespace JanSharp
         [System.NonSerialized] public int indexInOnlinePlayersInGroup = -1;
         #endregion
 
+        public override bool WannaBeClassSupportsPooling => true;
+        public override void ResetWannaBeClassToDefault()
+        {
+            base.ResetWannaBeClassToDefault();
+            permissionGroup = default;
+            indexInPlayersInGroup = -1;
+            indexInOnlinePlayersInGroup = -1;
+        }
+
         public bool HasPermission(PermissionDefinition permissionDef)
         {
             return permissionGroup.permissionValues[permissionDef.index];

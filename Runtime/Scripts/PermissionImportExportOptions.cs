@@ -12,6 +12,14 @@ namespace JanSharp
         [System.NonSerialized] public bool includePermissionGroups = true;
         [System.NonSerialized] public bool includePlayerPermissionGroups = true;
 
+        public override bool WannaBeClassSupportsPooling => true;
+        public override void ResetWannaBeClassToDefault()
+        {
+            base.ResetWannaBeClassToDefault();
+            includePermissionGroups = true;
+            includePlayerPermissionGroups = true;
+        }
+
         public override LockstepGameStateOptionsData Clone()
         {
             var clone = wannaBeClasses.New<PermissionImportExportOptions>(nameof(PermissionImportExportOptions));
